@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.logqtainia.March.MainActivity">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:id="@+id/container_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/btn_load_cube"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:background="@color/colorPrimaryDark"
+            android:gravity="center"
+            android:text="Capture"
+            android:textColor="#FFFF"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btn_open_blue_tooth"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:gravity="center"
+            android:text="Open Blue Tooth"
+            android:layout_weight="1" />
+
+
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/drawCubeLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="270dp"
+        android:layout_below="@id/container_layout"
+        android:layout_centerHorizontal="true">
+
+        <LinearLayout
+            android:id="@+id/cubeFace4"
+            style="@style/CubeFace"
+            android:layout_centerVertical="true"></LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cubeFace2"
+            style="@style/CubeFace"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/cubeFace4"></LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cubeFace0"
+            style="@style/CubeFace"
+            android:layout_above="@id/cubeFace2"
+            android:layout_toRightOf="@id/cubeFace4"></LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/cubeFace1"
+            style="@style/CubeFace"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/cubeFace2"></LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cubeFace3"
+            style="@style/CubeFace"
+            android:layout_toRightOf="@id/cubeFace4"
+            android:layout_below="@id/cubeFace2"></LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/cubeFace5"
+            style="@style/CubeFace"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/cubeFace1"></LinearLayout>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/drawCubeLayout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="51dp"
+        android:text="TextView" />
+</RelativeLayout>
