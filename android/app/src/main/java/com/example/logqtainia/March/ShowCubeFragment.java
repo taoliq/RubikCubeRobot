@@ -3,6 +3,7 @@ package com.example.logqtainia.March;
 import android.app.Fragment;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,10 +34,11 @@ public class ShowCubeFragment extends Fragment {
     TextView[] cubePieceTextView = new TextView[54];
     Button btnLoadCube;
     Button btnOpenBT;
+    Button btnSolveCube;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                           Bundle saveInstanceState) {
+                             Bundle saveInstanceState) {
         View view = inflater.inflate(R.layout.fragment_show_cube, container, false);
 
         tv = (TextView) view.findViewById(R.id.textView2);
@@ -51,6 +53,7 @@ public class ShowCubeFragment extends Fragment {
                         .commit();
             }
         });
+
         btnOpenBT = (Button) view.findViewById(R.id.btn_open_blue_tooth);
         if (((MainActivity) getActivity()).getBTHelper() != null)
             btnOpenBT.setEnabled(
@@ -62,13 +65,28 @@ public class ShowCubeFragment extends Fragment {
             }
         });
 
+        btnSolveCube = (Button) view.findViewById(R.id.btn_solve_cube);
+        btnSolveCube.setEnabled(false);
+        if (((MainActivity) getActivity()).getBTHelper() != null)
+            btnSolveCube.setEnabled(
+                    ((MainActivity) getActivity()).getBTHelper().getConnected());
+        btnSolveCube.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String operation = tv.getText().toString();
+                ((MainActivity) getActivity()).getBTHelper().send(operation.getBytes());
+                Log.i("Solve Result", operation);
+            }
+        });
+
         initDrawCube(view);
         drawCube();
 
         new Thread() {
             @Override
             public void run() {
-                result = search.solution(cubeString, maxDepth, 100, 0, mask);
+                //Error 8 probeMax 100 -> 1000
+                result = search.solution(cubeString, maxDepth, 1000, 0, mask);
                 tv.post(new Runnable() {
                     @Override
                     public void run() {
@@ -86,7 +104,7 @@ public class ShowCubeFragment extends Fragment {
                 22, getResources().getDisplayMetrics());
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(s, s);
-        int margin = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+        int margin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 2, getResources().getDisplayMetrics());
         lp.setMargins(margin, margin, margin, margin);
 
@@ -113,8 +131,8 @@ public class ShowCubeFragment extends Fragment {
     }
 
     private void drawCube() {
-        colorName = ((MainActivity)getActivity()).getColorName();
-        cubeString = ((MainActivity)getActivity()).getCubeString();
+        colorName = ((MainActivity) getActivity()).getColorName();
+        cubeString = ((MainActivity) getActivity()).getCubeString();
 
         for (int i = 0; i < 54; i++) {
 //            Log.i("drawCube", cubeString.charAt(i) + "");

@@ -86,4 +86,13 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="51dp"
         android:text="TextView" />
+
+    <Button
+        android:id="@+id/btn_solve_cube"
+        android:layout_width="match_parent"
+        android:background="@color/colorPrimaryDark"
+        android:layout_alignParentBottom="true"
+        android:text="Solve"
+        android:textColor="#FFFF"
+        android:layout_height="48dp" />
 </RelativeLayout>

@@ -20,7 +20,7 @@ MultiStepper multiStepper[2];
 
 String comdata = "";
 int step[2][3] = {400, -400, 800,
-                  -500, 450, 800};
+                  -450, 450, 800};
 long position[2];
 
 void setup() {
@@ -62,6 +62,7 @@ void exeCom() {
 }
 
 void solve() {
+  Serial.println(comdata);
   for (int i = 0; i < comdata.length(); i++) {
     if (comdata[i] == '\'' || comdata[i] == '2')
       continue;
@@ -69,8 +70,8 @@ void solve() {
     if (i != comdata.length() - 1
         && (comdata[i+1] == '\'' || comdata[i+1] == '2'))
       ori = comdata[i+1];
-    Serial.println(comdata[i]);
-    Serial.println(ori);
+    //Serial.println(comdata[i]);
+    //Serial.println(ori);
     move(comdata[i], ori);
   }
 }
@@ -149,6 +150,17 @@ void moveY(int ori) {
 //      Serial.println(stepper[id]->speed());
     stepper[4]->runSpeedToPosition();
   }
+
+  //1，3爪子抓紧（防止魔方下坠
+  stepper[5]->move(-50);
+//  stepper[5]->stop();
+//  stepper[5]->runToPosition();
+  while (stepper[5]->distanceToGo() != 0) {
+    stepper[5]->setSpeed(SPEED);
+//      Serial.println(stepper[id]->speed());
+    stepper[5]->runSpeedToPosition();
+  }
+  
   //1，3爪子旋转
   position[0] = stepper[1]->currentPosition() + step[0][1-ori];
   position[1] = stepper[3]->currentPosition() + step[0][ori];

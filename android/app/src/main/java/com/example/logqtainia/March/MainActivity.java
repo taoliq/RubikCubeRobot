@@ -56,6 +56,11 @@ public class MainActivity extends Activity {
                             getView().
                             findViewById(R.id.btn_open_blue_tooth).
                             setEnabled(!res);
+                    getFragmentManager().
+                            findFragmentByTag("ShowCube").
+                            getView().
+                            findViewById(R.id.btn_solve_cube).
+                            setEnabled(res);
                     Log.i("BTconnect", res + "");
                     if (res) {
 //                        setUIEnabled(true);
@@ -69,6 +74,7 @@ public class MainActivity extends Activity {
                     break;
                 case WHAT_RECV:
 //                    msg((String)msg.obj);
+                    Log.i("BT Receive", msg.obj.toString());
                     break;
             }
         }

@@ -10,6 +10,8 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -17,6 +19,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -50,6 +53,7 @@ public class LoadCubeFragment extends Fragment {
 //    private String[] state = new String[9];
     private int currentFace = 0;
     private Toast toast;
+    private boolean isDraw = false; //是否绘制定位方块
 
     View view;
 
@@ -62,7 +66,7 @@ public class LoadCubeFragment extends Fragment {
 
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+//            setupGuide();
         }
 
         @Override
@@ -79,6 +83,17 @@ public class LoadCubeFragment extends Fragment {
 
         surfaceView = (SurfaceView) view.findViewById(R.id.surfaceView);
         surfaceView.getHolder().addCallback(cpHolderCallback);
+//        ViewTreeObserver viewTreeObserver = surfaceView.getViewTreeObserver();
+//        viewTreeObserver.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+//            @Override
+//            public boolean onPreDraw() {
+//                if (!isDraw) {
+//
+//                    isDraw = true;
+//                }
+//                return true;
+//            }
+//        });
 
         guideRelativeLayout = (RelativeLayout) view.findViewById(R.id.guide_relative_layout);
         btnTake = (Button) view.findViewById(R.id.btn_take);
@@ -90,11 +105,24 @@ public class LoadCubeFragment extends Fragment {
         });
 
         setupSquares(view);
+        setupGuide();
+
+//        DisplayMetrics dm = new DisplayMetrics();
+//        // 获取屏幕信息
+//        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+//        int screenWidth = dm.widthPixels;
+//        int screenHeigh = dm.heightPixels;
+//        Log.v("获取屏幕宽度", "宽度:" + screenWidth + ",高度:" + screenHeigh);
 
         return view;
     }
 
+
     public void takePicture(View view) {
+        if (((MainActivity) getActivity()).getBTHelper() != null)
+            ((MainActivity) getActivity()).getBTHelper().send(
+                    (currentFace + " face finished.").getBytes());
+
         if (currentFace > 5) {
 //            Intent intent = setData();
 ////            intent.putExtra("result", result);
@@ -179,21 +207,27 @@ public class LoadCubeFragment extends Fragment {
 
             //采样点初始化
             Camera.Size size = camera.getParameters().getPreviewSize();
-//            Log.i("LOG", size.width + " " + size.height);
+            Log.i("carmera parameter", size.width + " " + size.height);
             int h = size.width; //相机是横着的
             int w = size.height;
             gap = Math.min(w, h) / 4;
             int cX = w / 2;
-            int cY = h - gap * 3 / 2;
+            int cY = gap * 3 / 2;
             startX = cX - gap;
             startY = cY - gap;
 
-            setupGuide();
+            DisplayMetrics dm = new DisplayMetrics();
+            getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+            int screenWidth = dm.widthPixels;
+            int screenHeigh = dm.heightPixels;
 
             //改变surfaceView尺寸
             RelativeLayout.LayoutParams p =
-                    new RelativeLayout.LayoutParams(w, h);
+                    new RelativeLayout.LayoutParams(screenWidth, screenWidth * h / w);
             surfaceView.setLayoutParams(p);
+            Log.i("startPreview", surfaceView.getWidth() + " " +  surfaceView.getHeight());
+
+            //setupGuide();
 
             Camera.Parameters params = camera.getParameters();
             params.setPreviewSize(h, w);
@@ -223,8 +257,9 @@ public class LoadCubeFragment extends Fragment {
 //                            Color.RGBToHSV(color[0], color[1], color[2], hsv);
 //                            tvCapturedSquares[i][j].setText("#" + colorToHex(color) + "\n" + "HSV:" + "\n" + hsv[0] + "\n" + hsv[1] + "\n" + hsv[2]);
 //                            tvCapturedSquares[i][j].setTextColor(Color.rgb(color[0], color[1],color[2]));
-                            tvCapturedSquares[i][j].setText("HSV:" + "\n"
-                                    + hsv[0] + "\n" + hsv[1] + "\n" + hsv[2]);
+                            tvCapturedSquares[i][j].setText("H: " + (int)(hsv[0]*10)/10.0 +
+                                    "\nS: " + (int)(hsv[1]*10)/10.0 +
+                                    "\nV: " + (int)(hsv[2]*10)/10.0);
                             tvCapturedSquares[i][j].setBackgroundColor(
                                     Color.HSVToColor(new float[]{hsv[0], hsv[1] / 255, hsv[2] / 255}));
                         }
@@ -254,7 +289,7 @@ public class LoadCubeFragment extends Fragment {
 
     public Bitmap decodeToBitMap(byte[] data) {
         Camera.Size size = camera.getParameters().getPreviewSize();
-//        Log.i("LOG", size.width + " " + size.height);
+        Log.i("decode", size.width + " " + size.height);
 //        int w = guideRelativeLayout.getRight();
 //        int h = guideRelativeLayout.getBottom();
 //        size.width = w;
@@ -317,6 +352,9 @@ public class LoadCubeFragment extends Fragment {
         TextView tv = new TextView(view.getContext());
         tv.setText("current face: " + MainActivity.FACES_ORDER.charAt(currentFace));
         tv.setPadding(margin, margin, margin, margin);
+        tv.setBackgroundColor(0xF0FFFFFF);
+//        tv.setTextColor(0xFFFFFF00);
+        tv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         cpw.addView(tv);
         tvCurrentFace = tv;
     }
@@ -338,6 +376,20 @@ public class LoadCubeFragment extends Fragment {
 //        gap = (int) Math.min(endX, endY) / 4;
 //        int centerX = (int) (endX / 2);
 //        int centerY = (int) (endY - gap * 3 / 2);
+        DisplayMetrics dm = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int screenWidth = dm.widthPixels;
+        int screenHeigh = dm.heightPixels;
+
+        int h = screenHeigh;
+        int w = screenWidth;
+        Log.i("guide square", h + " " + w);
+        gap = Math.min(w, h) / 4;
+        int cX = w / 2;
+        int cY = gap * 3 / 2;
+        startX = cX - gap;
+        startY = cY - gap;
+
         len = dpToPx(10);
 //        System.out.print(endX + '\n' + endY);
 //        Log.i("Tag_demo", endX - guideRelativeLayout.getLeft() + " " + (endY - guideRelativeLayout.getTop()));

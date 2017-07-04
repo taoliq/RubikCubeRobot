@@ -87,7 +87,7 @@ public class ColorDetector {
         FaceColor[] faceColor = new FaceColor[63];
         StringBuilder[][] cubeState = new StringBuilder[6][9];
         String notation = "";
-        //前六个元素表示对应面的颜色，最后一个元素表示魔方的状态，如FFFFFFRRRRRRBBBBBBLLLLLLUUUUUUDDDDDD
+        //前六个元素表示对应面的颜色，最后一个元素表示魔方的状态，如FFFFFFFFFRRRRRRBBBBBBLLLLLLUUUUUUDDDDDD
         StringBuilder[] result = new StringBuilder[7];
 
         for (int i = 0; i < 6; i++) {
