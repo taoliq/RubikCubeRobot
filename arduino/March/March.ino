@@ -18,9 +18,10 @@ AccelStepper* stepper[6] = {
 
 MultiStepper multiStepper[2];
 
+char status = 'O';  //means cube's status in getting colors
 String comdata = "";
 int step[2][3] = {400, -400, 800,
-                  -450, 450, 800};
+                  -470, 450, -50};
 long position[2];
 
 void setup() {
@@ -59,6 +60,19 @@ void exeCom() {
   if (comdata == "") return;
   solve();
   comdata = "";
+}
+
+void rotate_cube() {
+  switch (status) {
+    // case 'O': baseMove(); status = 'O'; break;
+    // case 'O': baseMove(); status = 'O'; break;
+    // case 'O': baseMove(); status = 'O'; break;
+    // case 'O': baseMove(); status = 'O'; break;
+    // case 'O': baseMove(); status = 'O'; break;
+    // case 'O': baseMove(); status = 'O'; break;
+    // case 'O': baseMove(); status = 'O'; break;
+    default: break;
+  }
 }
 
 void solve() {
@@ -139,7 +153,28 @@ void moveD(char ori) {
   moveB(ori);
   moveY(1);
 }
+void moveY(int ori) {
+  String com = "";
+  
+  //0,2爪子离开
+  com += "41";
+  //1，3爪子抓紧（防止魔方下坠
+  com += "52";
+  //1，3爪子旋转
+  com += ori? "71" : "70";
+  //0，2爪子靠近
+  com += "40";
+  //1，3爪子离开
+  com += "51";
+  //1，3爪子旋转
+  com += ori? "71" : "70";
+  //1，3爪子靠近
+  com += "50";
 
+  baseMove(com);
+}
+
+/*
 void moveY(int ori) {
   //0,2爪子离开
   stepper[4]->move(step[1][1]);
@@ -199,21 +234,37 @@ void moveY(int ori) {
     stepper[5]->runSpeedToPosition();
   }
 }
+*/
 
 void baseMove(String com) {
+  //每一对参数第一个表示电机序号(0-5)，第二个表示转动角度(90,180,-90)
+  //序号6（7）代表爪子0，2（1，3）整体旋转，需要用到另一个类，故额外处理
   for (int i = 0; i < com.length() - 1; i += 2) {
     int id = com[i] - '0';
     int ori = com[i+1] - '0';
-    stepper[id]->move(step[id / 4][ori]);
-    // while (stepper[id]->run());
-//    Serial.println(stepper[id]->currentPosition());
-//    stepper[id]->runToPosition();
-//    Serial.println(stepper[id]->speed());
-//    stepper[id]->stop();
-    while (stepper[id]->distanceToGo() != 0) {
-      stepper[id]->setSpeed(SPEED);
-//      Serial.println(stepper[id]->speed());
-      stepper[id]->runSpeedToPosition();
+    if (id < 6) {
+      stepper[id]->move(step[id / 4][ori]);
+      // while (stepper[id]->run());
+  //    Serial.println(stepper[id]->currentPosition());
+  //    stepper[id]->runToPosition();
+  //    Serial.println(stepper[id]->speed());
+  //    stepper[id]->stop();
+      while (stepper[id]->distanceToGo() != 0) {
+        stepper[id]->setSpeed(SPEED);
+  //      Serial.println(stepper[id]->speed());
+        stepper[id]->runSpeedToPosition();
+      }
+    } else {
+      if (id == 6) {
+        position[0] = stepper[0]->currentPosition() + step[0][1-ori];
+        position[1] = stepper[2]->currentPosition() + step[0][ori];
+      } else {
+        position[0] = stepper[1]->currentPosition() + step[0][1-ori];
+        position[1] = stepper[3]->currentPosition() + step[0][ori];
+      }
+      multiStepper[id%2].moveTo(position);
+      multiStepper[id%2].runSpeedToPosition();
     }
+    
   }
 }
