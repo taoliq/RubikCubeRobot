@@ -21,7 +21,7 @@ MultiStepper multiStepper[2];
 char status = 'O';  //means cube's status in getting colors
 String comdata = "";
 int step[2][3] = {400, -400, 800,
-                  -470, 450, -50};
+  -470, 450, -50};
 long position[2];
 
 void setup() {
@@ -51,26 +51,50 @@ void getCom() {
   while (Serial.available()) {
     char c = Serial.read();
 //    Serial.println(c);
-    comdata += c;
-    delay(2);
-  }
+comdata += c;
+delay(2);
+}
 }
 
 void exeCom() {
   if (comdata == "") return;
-  solve();
+  if (comdata == "Rotate")
+    rotate_cube();
+  else
+    solve();
   comdata = "";
 }
 
 void rotate_cube() {
   switch (status) {
-    // case 'O': baseMove(); status = 'O'; break;
-    // case 'O': baseMove(); status = 'O'; break;
-    // case 'O': baseMove(); status = 'O'; break;
-    // case 'O': baseMove(); status = 'O'; break;
-    // case 'O': baseMove(); status = 'O'; break;
-    // case 'O': baseMove(); status = 'O'; break;
-    // case 'O': baseMove(); status = 'O'; break;
+    case 'O': 
+      baseMove("51715041"); 
+      status = 'U'; 
+      break;
+    case 'U': 
+      baseMove("72"); 
+      status = 'D'; 
+      break;
+    case 'D': 
+      baseMove("71614051");
+      status = 'F'; 
+      break;
+    case 'F': 
+      baseMove("62"); 
+      status = 'B'; 
+      break;
+    case 'B': 
+      baseMove(""); 
+      status = 'L'; 
+      break;
+    case 'L': 
+      baseMove(""); 
+      status = 'R'; 
+      break;
+    case 'R': 
+      baseMove(""); 
+      status = 'O'; 
+      break;
     default: break;
   }
 }
@@ -79,11 +103,11 @@ void solve() {
   Serial.println(comdata);
   for (int i = 0; i < comdata.length(); i++) {
     if (comdata[i] == '\'' || comdata[i] == '2')
-      continue;
+    continue;
     char ori = ' ';
     if (i != comdata.length() - 1
-        && (comdata[i+1] == '\'' || comdata[i+1] == '2'))
-      ori = comdata[i+1];
+      && (comdata[i+1] == '\'' || comdata[i+1] == '2'))
+    ori = comdata[i+1];
     //Serial.println(comdata[i]);
     //Serial.println(ori);
     move(comdata[i], ori);
@@ -249,22 +273,22 @@ void baseMove(String com) {
   //    stepper[id]->runToPosition();
   //    Serial.println(stepper[id]->speed());
   //    stepper[id]->stop();
-      while (stepper[id]->distanceToGo() != 0) {
-        stepper[id]->setSpeed(SPEED);
+  while (stepper[id]->distanceToGo() != 0) {
+    stepper[id]->setSpeed(SPEED);
   //      Serial.println(stepper[id]->speed());
-        stepper[id]->runSpeedToPosition();
-      }
+  stepper[id]->runSpeedToPosition();
+}
+} else {
+  if (id == 6) {
+    position[0] = stepper[0]->currentPosition() + step[0][1-ori];
+    position[1] = stepper[2]->currentPosition() + step[0][ori];
     } else {
-      if (id == 6) {
-        position[0] = stepper[0]->currentPosition() + step[0][1-ori];
-        position[1] = stepper[2]->currentPosition() + step[0][ori];
-      } else {
-        position[0] = stepper[1]->currentPosition() + step[0][1-ori];
-        position[1] = stepper[3]->currentPosition() + step[0][ori];
-      }
-      multiStepper[id%2].moveTo(position);
-      multiStepper[id%2].runSpeedToPosition();
+      position[0] = stepper[1]->currentPosition() + step[0][1-ori];
+      position[1] = stepper[3]->currentPosition() + step[0][ori];
     }
-    
+    multiStepper[id%2].moveTo(position);
+    multiStepper[id%2].runSpeedToPosition();
   }
+
+}
 }
