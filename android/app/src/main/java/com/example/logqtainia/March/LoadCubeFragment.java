@@ -10,7 +10,7 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.support.v4.view.animation.FastOutLinearInInterpolator;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -19,7 +19,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -121,7 +120,8 @@ public class LoadCubeFragment extends Fragment {
     public void takePicture(View view) {
         if (((MainActivity) getActivity()).getBTHelper() != null)
             ((MainActivity) getActivity()).getBTHelper().send(
-                    (currentFace + " face finished.").getBytes());
+//                    (currentFace + " face finished.").getBytes());
+                    ("Rot").getBytes());
 
         if (currentFace > 5) {
 //            Intent intent = setData();
@@ -406,7 +406,7 @@ public class LoadCubeFragment extends Fragment {
                 tv.setY(startY + gap * j - len / 2);
                 tv.setWidth(len);
                 tv.setHeight(len);
-                tv.setBackgroundColor(getActivity().getColor(R.color.colorAccent));
+                tv.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
 //                tv.setLayoutParams(lp);
                 guideRelativeLayout.addView(tv);
             }

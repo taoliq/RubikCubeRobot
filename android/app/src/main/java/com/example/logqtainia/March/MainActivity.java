@@ -19,12 +19,12 @@ public class MainActivity extends Activity {
     private BluetoothDevice device;
 
     public static final int SIZE = 3;
-    public static final String FACES_ORDER = "FRBLUD";
+    public static final String FACES_ORDER = "UDFBLR"; //"FRBLUD";
 
     private String cubeString = "UUUUUUUUU" + "RRRRRRRRR" + "FFFFFFFFF"
-            + "DDDDDDDDD" + "LLLLLLLLL" + "BBBBBBBBB";
+            + "DDDDDDDDD" + "LLLLLLLLL" + "BBBBBBBBB";  //展开图中0-5分别为URFDLB
     private String result;
-    private String[] colorName = new String[]{"yellow", "red", "blue", "white", "orange", "green"};
+    private String[] colorName = new String[]{"yellow", "white", "blue", "green", "orange", "red"};
 
     private BTHelper mBTHelper = null;
 

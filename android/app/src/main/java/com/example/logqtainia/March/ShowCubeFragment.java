@@ -19,13 +19,12 @@ import cs.min2phase.Search;
  */
 
 public class ShowCubeFragment extends Fragment {
-    public static final int SIZE = 3;
-    public static final String FACES_ORDER = "FRBLUD";
+//    public static final int SIZE = 3;
+//    public static final String FACES_ORDER = "UDFBLR";
 
-    private String cubeString = "UUUUUUUUU" + "RRRRRRRRR" + "FFFFFFFFF"
-            + "DDDDDDDDD" + "LLLLLLLLL" + "BBBBBBBBB";
+    private String cubeString;
     private String result;
-    private String[] colorName = new String[]{"yellow", "red", "blue", "white", "orange", "green"};
+    private String[] colorName;
     private Search search = new Search();
     private int maxDepth = 21;
     private int mask = 0;
@@ -46,6 +45,8 @@ public class ShowCubeFragment extends Fragment {
         btnLoadCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (((MainActivity) getActivity()).getBTHelper() != null)
+                    ((MainActivity) getActivity()).getBTHelper().send("Init".getBytes());
                 getFragmentManager()
                         .beginTransaction()
                         .addToBackStack(null)
@@ -73,7 +74,7 @@ public class ShowCubeFragment extends Fragment {
         btnSolveCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String operation = tv.getText().toString();
+                String operation = tv.getText().toString().replace(" ", "");
                 ((MainActivity) getActivity()).getBTHelper().send(operation.getBytes());
                 Log.i("Solve Result", operation);
             }
@@ -90,7 +91,7 @@ public class ShowCubeFragment extends Fragment {
                 tv.post(new Runnable() {
                     @Override
                     public void run() {
-                        tv.setText(result);
+                        tv.setText("Solution is\n" + result);
                     }
                 });
             }
@@ -114,16 +115,17 @@ public class ShowCubeFragment extends Fragment {
             int id = res.getIdentifier(idName, "id", getActivity().getPackageName());
             LinearLayout cf = (LinearLayout) view.findViewById(id);
 
-            for (int j = 0; j < SIZE; j++) {
+            for (int j = 0; j < MainActivity.SIZE; j++) {
                 LinearLayout l = new LinearLayout(view.getContext());
                 l.setOrientation(LinearLayout.HORIZONTAL);
-                for (int k = 0; k < SIZE; k++) {
+                for (int k = 0; k < MainActivity.SIZE; k++) {
                     TextView tv = new TextView(view.getContext());
                     tv.setLayoutParams(lp);
 //                    tv.setBackgroundColor(ColorDetector.nameToRGB(colorName[i]));
 //                    tv.setBackgroundResource(R.drawable.border);
                     l.addView(tv);
                     cubePieceTextView[i * 9 + j * 3 + k] = tv;
+                    cubePieceTextView[i * 9 + j * 3 + k].setText(i + "");
                 }
                 cf.addView(l);
             }
@@ -133,13 +135,16 @@ public class ShowCubeFragment extends Fragment {
     private void drawCube() {
         colorName = ((MainActivity) getActivity()).getColorName();
         cubeString = ((MainActivity) getActivity()).getCubeString();
+        Log.i("colorString", cubeString);
 
         for (int i = 0; i < 54; i++) {
 //            Log.i("drawCube", cubeString.charAt(i) + "");
 //            Log.i("drawCube", FACES_ORDER.indexOf(cubeString.charAt(i)) + "");
             cubePieceTextView[i].setBackgroundColor(
                     ColorDetector.nameToRGB(
-                            colorName[FACES_ORDER.indexOf(cubeString.charAt(i))]));
+                            colorName[MainActivity.FACES_ORDER.indexOf(cubeString.charAt(i))]));
+//            Log.i("color", cubeString.charAt(i) + " " + MainActivity.FACES_ORDER.indexOf(cubeString.charAt(i)));
+//            Log.i("color", colorName[FACES_ORDER.indexOf(cubeString.charAt(i))]);
         }
     }
 }
