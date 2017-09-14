@@ -21,7 +21,7 @@ MultiStepper multiStepper[2];
 char status = 'O';  //means cube's status in getting colors
 String comdata = "";
 int step[2][3] = {400, -400, 800,
-  -470, 450, -50};
+  -490, 450, -50};
 long position[2];
 
 void setup() {
@@ -51,14 +51,18 @@ void getCom() {
   while (Serial.available()) {
     char c = Serial.read();
 //    Serial.println(c);
-comdata += c;
-delay(2);
-}
+  comdata += c;
+  delay(2);
+  }
 }
 
 void exeCom() {
   if (comdata == "") return;
-  if (comdata == "Rotate")
+  Serial.println(comdata);
+  if (comdata == "Init") {
+    status = 'O'; 
+    rotate_cube();
+  } else if (comdata == "Rot")
     rotate_cube();
   else
     solve();
@@ -76,7 +80,7 @@ void rotate_cube() {
       status = 'D'; 
       break;
     case 'D': 
-      baseMove("71614051");
+      baseMove("70614051");
       status = 'F'; 
       break;
     case 'F': 
@@ -84,23 +88,23 @@ void rotate_cube() {
       status = 'B'; 
       break;
     case 'B': 
-      baseMove(""); 
+      baseMove("605041614051"); 
       status = 'L'; 
       break;
     case 'L': 
-      baseMove(""); 
+      baseMove("62"); 
       status = 'R'; 
       break;
     case 'R': 
-      baseMove(""); 
-      status = 'O'; 
+      baseMove("617150417040"); 
+      status = 'Z'; 
       break;
     default: break;
   }
 }
 
 void solve() {
-  Serial.println(comdata);
+  // Serial.println(comdata);
   for (int i = 0; i < comdata.length(); i++) {
     if (comdata[i] == '\'' || comdata[i] == '2')
     continue;
@@ -280,10 +284,10 @@ void baseMove(String com) {
 }
 } else {
   if (id == 6) {
-    position[0] = stepper[0]->currentPosition() + step[0][1-ori];
+    position[0] = stepper[0]->currentPosition() - step[0][ori];
     position[1] = stepper[2]->currentPosition() + step[0][ori];
     } else {
-      position[0] = stepper[1]->currentPosition() + step[0][1-ori];
+      position[0] = stepper[1]->currentPosition() - step[0][ori];
       position[1] = stepper[3]->currentPosition() + step[0][ori];
     }
     multiStepper[id%2].moveTo(position);
