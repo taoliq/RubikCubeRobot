@@ -19,9 +19,10 @@ AccelStepper* stepper[6] = {
 MultiStepper multiStepper[2];
 
 char status = 'O';  //means cube's status in getting colors
+int isyRotate = 1; //Did chube have y rotate?
 String comdata = "";
 int step[2][3] = {400, -400, 800,
-  -490, 450, -50};
+  -460, 450, -20};
 long position[2];
 
 void setup() {
@@ -61,6 +62,7 @@ void exeCom() {
   Serial.println(comdata);
   if (comdata == "Init") {
     status = 'O'; 
+    isyRotate = 0;
     rotate_cube();
   } else if (comdata == "Rot")
     rotate_cube();
@@ -120,12 +122,16 @@ void solve() {
 
 void move(char face, char ori) {
   switch (face) {
-    case 'U': moveU(ori); break;
-    case 'F': moveF(ori); break;
+    // case 'U': moveU(ori); break;
+    // case 'F': moveF(ori); break;
+    case 'U': moveUF('U', ori); break;
+    case 'F': moveUF('F', ori); break;
     case 'R': moveR(ori); break;
-    case 'B': moveB(ori); break;
     case 'L': moveL(ori); break;
-    case 'D': moveD(ori); break;
+    // case 'B': moveB(ori); break;
+    // case 'D': moveD(ori); break;
+    case 'B': moveDB('B', ori); break;
+    case 'D': moveDB('D', ori); break;
     default: break;
   }
 }
@@ -174,6 +180,41 @@ void moveU(char ori) {
   moveY(0);
   moveF(ori);
   moveY(1);
+}
+
+void moveUF(char face, char ori) {
+  if ((face == 'F' && isyRotate) || (face == 'U' && !isyRotate)) {
+    isyRotate = !isyRotate;
+    moveY(isyRotate);
+  }
+    
+  // if (face == 'F' && !isyRotate) {
+  //   moveY(0);
+  //   isyRotate = true;
+  // }
+
+  String com = "";
+  switch (ori) {
+    case ' ':   com = "00410140"; break;
+    case '\'':  com = "01410040"; break;
+    case '2':   com = "02"; break;
+  }
+  baseMove(com);
+}
+
+void moveDB(char face, char ori) {
+  if ((face == 'B' && isyRotate) || (face == 'D' && !isyRotate)) {
+    isyRotate = !isyRotate;
+    moveY(isyRotate);
+  }
+
+  String com = "";
+  switch (ori) {
+    case ' ':   com = "20412140"; break;
+    case '\'':  com = "21412040"; break;
+    case '2':   com = "22"; break;
+  }
+  baseMove(com);
 }
 
 void moveD(char ori) {
@@ -277,22 +318,21 @@ void baseMove(String com) {
   //    stepper[id]->runToPosition();
   //    Serial.println(stepper[id]->speed());
   //    stepper[id]->stop();
-  while (stepper[id]->distanceToGo() != 0) {
-    stepper[id]->setSpeed(SPEED);
-  //      Serial.println(stepper[id]->speed());
-  stepper[id]->runSpeedToPosition();
-}
-} else {
-  if (id == 6) {
-    position[0] = stepper[0]->currentPosition() - step[0][ori];
-    position[1] = stepper[2]->currentPosition() + step[0][ori];
+      while (stepper[id]->distanceToGo() != 0) {
+        stepper[id]->setSpeed(SPEED);
+      //      Serial.println(stepper[id]->speed());
+        stepper[id]->runSpeedToPosition();
+      }
     } else {
-      position[0] = stepper[1]->currentPosition() - step[0][ori];
-      position[1] = stepper[3]->currentPosition() + step[0][ori];
+      if (id == 6) {
+        position[0] = stepper[0]->currentPosition() - step[0][ori];
+        position[1] = stepper[2]->currentPosition() + step[0][ori];
+      } else {
+        position[0] = stepper[1]->currentPosition() - step[0][ori];
+        position[1] = stepper[3]->currentPosition() + step[0][ori];
+      }
+      multiStepper[id%2].moveTo(position);
+      multiStepper[id%2].runSpeedToPosition();
     }
-    multiStepper[id%2].moveTo(position);
-    multiStepper[id%2].runSpeedToPosition();
   }
-
-}
 }

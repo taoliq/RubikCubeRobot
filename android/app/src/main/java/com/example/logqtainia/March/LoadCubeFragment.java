@@ -256,7 +256,7 @@ public class LoadCubeFragment extends Fragment {
 //                            float[] hsv = new float[3];
 //                            Color.RGBToHSV(color[0], color[1], color[2], hsv);
 //                            tvCapturedSquares[i][j].setText("#" + colorToHex(color) + "\n" + "HSV:" + "\n" + hsv[0] + "\n" + hsv[1] + "\n" + hsv[2]);
-//                            tvCapturedSquares[i][j].setTextColor(Color.rgb(color[0], color[1],color[2]));
+//                            tvCapturedSquares[i][j].setTextColor(Color泡沫版.rgb(color[0], color[1],color[2]));
                             tvCapturedSquares[i][j].setText("H: " + (int)(hsv[0]*10)/10.0 +
                                     "\nS: " + (int)(hsv[1]*10)/10.0 +
                                     "\nV: " + (int)(hsv[2]*10)/10.0);
