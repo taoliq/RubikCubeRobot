@@ -4,6 +4,12 @@
 #define SPEED 1000
 #define ACCELERATION 900
 
+//control mode define
+#define SOLVE 0
+#define INIT 1
+#define LOAD 2
+#define MANUAL 3
+
 AccelStepper stepper0(AccelStepper::DRIVER, 2, 3);
 AccelStepper stepper1(AccelStepper::DRIVER, 4, 5);
 AccelStepper stepper2(AccelStepper::DRIVER, 6, 7);
@@ -18,11 +24,13 @@ AccelStepper* stepper[6] = {
 
 MultiStepper multiStepper[2];
 
-char status = 'O';  //means cube's status in getting colors
-int isyRotate = 1; //Did chube have y rotate?
+char cubeStatus = 'O';  //means cube's Status in getting colors
+int isyRotate = 0; //Did chube have y rotate?
+int ctrlMode = SOLVE;
 String comdata = "";
-int step[2][3] = {400, -400, 800,
-  -460, 450, -20};
+int step[2][3] = {400, -400, -800,
+  -465, 450, -15};
+int offset[4] = {10, -10, 0, 0}; //operation FRBL offsets
 long position[2];
 
 void setup() {
@@ -43,9 +51,10 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  // put your main code here, to run repeatedly
   getCom();
   exeCom();
+  // Serial.println(ctrlMode);
 }
 
 void getCom() {
@@ -58,58 +67,113 @@ void getCom() {
 }
 
 void exeCom() {
-  if (comdata == "") return;
-  Serial.println(comdata);
-  if (comdata == "Init") {
-    status = 'O'; 
-    isyRotate = 0;
-    rotate_cube();
-  } else if (comdata == "Rot")
-    rotate_cube();
-  else
-    solve();
+  if (comdata == "" && ctrlMode != MANUAL) return;
+  if (comdata != "")
+    Serial.println(comdata);  
+  if (comdata.length() && comdata[0] == ':') {
+    if (comdata.substring(1) == "Solve")  ctrlMode = SOLVE;
+    if (comdata.substring(1) == "Init")   ctrlMode = INIT;
+    if (comdata.substring(1) == "Load")   ctrlMode = LOAD;
+    if (comdata.substring(1) == "Manual") ctrlMode = MANUAL;    
+    // if (ctrlMode == "Load") {
+    //   init_cube();
+    //   rotate_cube();
+    // }
+    // return;Manual
+    comdata = "";    
+  }
+  // if (comdata == "Init") {
+  //   init_cube();
+  //   rotate_cube();
+  // } else if (comdata == "Rot")
+  //   rotate_cube();
+  // else
+  //   solve();
+
+  switch (ctrlMode) {
+    case SOLVE: solve(); break;
+    case INIT: init_cube(); ctrlMode = LOAD; comdata = "Rot";
+    case LOAD: rotate_cube(); break;
+    case MANUAL: man_ctrl(); break;
+    default: break;
+  }
+  
+  // if (ctrlMode == "Load") {
+  //   rotate_cube();
+  // } 
+  // if (ctrlMode == "Manual") {
+  //   man_ctrl();
+  // } 
+  // if (ctrlMode == "Solve") {
+  //   solve();
+  // }
   comdata = "";
 }
 
+void init_cube() {
+    cubeStatus = 'O'; 
+    isyRotate = 0;
+    // for (int i = 0; i < 4; i++)
+    //   offset[i] = 0;
+}
+
 void rotate_cube() {
-  switch (status) {
+  if (comdata == "") return;
+  switch (cubeStatus) {
     case 'O': 
       baseMove("51715041"); 
-      status = 'U'; 
+      cubeStatus = 'U'; 
       break;
     case 'U': 
       baseMove("72"); 
-      status = 'D'; 
+      cubeStatus = 'D'; 
       break;
     case 'D': 
       baseMove("70614051");
-      status = 'F'; 
+      cubeStatus = 'F'; 
       break;
     case 'F': 
       baseMove("62"); 
-      status = 'B'; 
+      cubeStatus = 'B'; 
       break;
     case 'B': 
       baseMove("605041614051"); 
-      status = 'L'; 
+      cubeStatus = 'L'; 
       break;
     case 'L': 
       baseMove("62"); 
-      status = 'R'; 
+      cubeStatus = 'R'; 
       break;
     case 'R': 
       baseMove("617150417040"); 
-      status = 'Z'; 
+      cubeStatus = 'Z'; 
       break;
     default: break;
   }
+}
+
+//control machine directly by android
+void man_ctrl() {
+  static int id = 0;
+  static int ori = 0;
+  if (comdata.length()) {
+    id = comdata[0] - '0';
+    ori = comdata[1] - '0' - 1;
+  }
+  if (ori) {
+    stepper[id]->setSpeed(SPEED * ori);
+    stepper[id]->runSpeed();
+  } else {
+    id = ori = 0;
+  }
+  // Serial.println("Quit man_ctrl()");
 }
 
 void solve() {
   // Serial.println(comdata);
   for (int i = 0; i < comdata.length(); i++) {
     if (comdata[i] == '\'' || comdata[i] == '2')
-    continue;
+      continue;
     char ori = ' ';
     if (i != comdata.length() - 1
       && (comdata[i+1] == '\'' || comdata[i+1] == '2'))
@@ -184,8 +248,8 @@ void moveU(char ori) {
 
 void moveUF(char face, char ori) {
   if ((face == 'F' && isyRotate) || (face == 'U' && !isyRotate)) {
-    isyRotate = !isyRotate;
     moveY(isyRotate);
+    isyRotate = !isyRotate;
   }
     
   // if (face == 'F' && !isyRotate) {
@@ -204,8 +268,8 @@ void moveUF(char face, char ori) {
 
 void moveDB(char face, char ori) {
   if ((face == 'B' && isyRotate) || (face == 'D' && !isyRotate)) {
-    isyRotate = !isyRotate;
     moveY(isyRotate);
+    isyRotate = !isyRotate;
   }
 
   String com = "";
@@ -312,15 +376,21 @@ void baseMove(String com) {
     int id = com[i] - '0';
     int ori = com[i+1] - '0';
     if (id < 6) {
-      stepper[id]->move(step[id / 4][ori]);
+      int e = 0;
+      if (id < 4) {
+        // offset[id] = -offset[id] + (ori? -5 : 5);
+        e = offset[ori];
+      }
+      stepper[id]->move(step[id / 4][ori] + e);
       // while (stepper[id]->run());
-  //    Serial.println(stepper[id]->currentPosition());
+      // Serial.println(e);
+      // Serial.println(step[id / 4][ori] + e);
   //    stepper[id]->runToPosition();
   //    Serial.println(stepper[id]->speed());
   //    stepper[id]->stop();
+  
       while (stepper[id]->distanceToGo() != 0) {
         stepper[id]->setSpeed(SPEED);
-      //      Serial.println(stepper[id]->speed());
         stepper[id]->runSpeedToPosition();
       }
     } else {
