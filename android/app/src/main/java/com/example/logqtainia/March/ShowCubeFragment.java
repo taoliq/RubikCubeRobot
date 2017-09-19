@@ -34,6 +34,7 @@ public class ShowCubeFragment extends Fragment {
     Button btnLoadCube;
     Button btnOpenBT;
     Button btnSolveCube;
+    Button btnManCtrl;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -41,12 +42,13 @@ public class ShowCubeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_show_cube, container, false);
 
         tv = (TextView) view.findViewById(R.id.textView2);
+
         btnLoadCube = (Button) view.findViewById(R.id.btn_load_cube);
         btnLoadCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (((MainActivity) getActivity()).getBTHelper() != null)
-                    ((MainActivity) getActivity()).getBTHelper().send("Init".getBytes());
+                    ((MainActivity) getActivity()).getBTHelper().send(":Init".getBytes());
                 getFragmentManager()
                         .beginTransaction()
                         .addToBackStack(null)
@@ -66,6 +68,24 @@ public class ShowCubeFragment extends Fragment {
             }
         });
 
+        btnManCtrl = (Button) view.findViewById(R.id.btn_manual_control);
+        btnManCtrl.setEnabled(false);
+        if (((MainActivity) getActivity()).getBTHelper() != null)
+            btnManCtrl.setEnabled(
+                    ((MainActivity) getActivity()).getBTHelper().getConnected());
+        btnManCtrl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((MainActivity) getActivity()).getBTHelper() != null)
+                    ((MainActivity) getActivity()).getBTHelper().send(":Manual".getBytes());
+                getFragmentManager()
+                        .beginTransaction()
+                        .addToBackStack(null)
+                        .replace(R.id.container, new ManualControlFragment())
+                        .commit();
+            }
+        });
+
         btnSolveCube = (Button) view.findViewById(R.id.btn_solve_cube);
         btnSolveCube.setEnabled(false);
         if (((MainActivity) getActivity()).getBTHelper() != null)
@@ -74,9 +94,9 @@ public class ShowCubeFragment extends Fragment {
         btnSolveCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String operation = tv.getText().toString().replace(" ", "");
-                ((MainActivity) getActivity()).getBTHelper().send(operation.getBytes());
-                Log.i("Solve Result", operation);
+                result = tv.getText().toString().replace(" ", "");
+                ((MainActivity) getActivity()).getBTHelper().send(result.getBytes());
+                Log.i("Solve Result", result);
             }
         });
 

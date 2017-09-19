@@ -59,6 +59,11 @@ public class MainActivity extends Activity {
                     getFragmentManager().
                             findFragmentByTag("ShowCube").
                             getView().
+                            findViewById(R.id.btn_manual_control).
+                            setEnabled(res);
+                    getFragmentManager().
+                            findFragmentByTag("ShowCube").
+                            getView().
                             findViewById(R.id.btn_solve_cube).
                             setEnabled(res);
                     Log.i("BTconnect", res + "");
@@ -111,6 +116,8 @@ public class MainActivity extends Activity {
             }
         }
         if (!found) Toast.makeText(getApplicationContext(), "Please Pair the Device first",
+                Toast.LENGTH_SHORT).show();
+        else Toast.makeText(getApplicationContext(), "Found Device Successfully",
                 Toast.LENGTH_SHORT).show();
         return found;
     }

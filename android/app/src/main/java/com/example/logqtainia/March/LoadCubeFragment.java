@@ -82,17 +82,6 @@ public class LoadCubeFragment extends Fragment {
 
         surfaceView = (SurfaceView) view.findViewById(R.id.surfaceView);
         surfaceView.getHolder().addCallback(cpHolderCallback);
-//        ViewTreeObserver viewTreeObserver = surfaceView.getViewTreeObserver();
-//        viewTreeObserver.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-//            @Override
-//            public boolean onPreDraw() {
-//                if (!isDraw) {
-//
-//                    isDraw = true;
-//                }
-//                return true;
-//            }
-//        });
 
         guideRelativeLayout = (RelativeLayout) view.findViewById(R.id.guide_relative_layout);
         btnTake = (Button) view.findViewById(R.id.btn_take);
@@ -118,23 +107,18 @@ public class LoadCubeFragment extends Fragment {
 
 
     public void takePicture(View view) {
-        if (((MainActivity) getActivity()).getBTHelper() != null)
-            ((MainActivity) getActivity()).getBTHelper().send(
-//                    (currentFace + " face finished.").getBytes());
-                    ("Rot").getBytes());
-
         if (currentFace > 5) {
-//            Intent intent = setData();
-////            intent.putExtra("result", result);
-//            //send data back to previous activity
-//            setResult(1001, intent);
-//            finish();
-//            return;
-
             setResult();
+            if (((MainActivity) getActivity()).getBTHelper() != null)
+                ((MainActivity) getActivity()).getBTHelper().send(
+                        (":Solve").getBytes());
             getFragmentManager().popBackStack();
             return;
         }
+
+        if (((MainActivity) getActivity()).getBTHelper() != null)
+            ((MainActivity) getActivity()).getBTHelper().send(
+                    ("Rot").getBytes());
 
 //        for (int i = 0; i < MainActivity.SIZE * MainActivity.SIZE; i++) {
 //            capturedFaces[currentFace][i] = state[i];

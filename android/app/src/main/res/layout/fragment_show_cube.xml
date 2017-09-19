@@ -30,6 +30,13 @@
             android:text="Open Blue Tooth"
             android:layout_weight="1" />
 
+        <Button
+            android:id="@+id/btn_manual_control"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:gravity="center"
+            android:text="Manual Contorl"
+            android:layout_weight="1" />
 
     </LinearLayout>
 
