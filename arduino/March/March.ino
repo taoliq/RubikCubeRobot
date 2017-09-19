@@ -1,7 +1,7 @@
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 
-#define SPEED 1000
+#define SPEED 1200
 #define ACCELERATION 900
 
 //control mode define
@@ -29,15 +29,16 @@ int isyRotate = 0; //Did chube have y rotate?
 int ctrlMode = SOLVE;
 String comdata = "";
 int step[2][3] = {400, -400, -800,
-  -465, 450, -15};
-int offset[4] = {10, -10, 0, 0}; //operation FRBL offsets
+  -460, 450, 0};
+int offset[4] = {10, -10, -10, 0}; //operation FRBL offsets
+int totalError[4] = {0, 0, 0, 0};
 long position[2];
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   for (int i = 0; i < 6; i++) {
-    stepper[i]->setMaxSpeed(SPEED);
+    stepper[i]->setMaxSpeed(SPEED * 2);
     stepper[i]->setSpeed(SPEED);
     stepper[i]->setAcceleration(ACCELERATION);
   }
@@ -113,8 +114,8 @@ void exeCom() {
 void init_cube() {
     cubeStatus = 'O'; 
     isyRotate = 0;
-    // for (int i = 0; i < 4; i++)
-    //   offset[i] = 0;
+    for (int i = 0; i < 4; i++)
+      totalError[i] = 0;
 }
 
 void rotate_cube() {
@@ -156,15 +157,27 @@ void rotate_cube() {
 void man_ctrl() {
   static int id = 0;
   static int ori = 0;
+  static int dis = 1;
   if (comdata.length()) {
     id = comdata[0] - '0';
     ori = comdata[1] - '0' - 1;
   }
   if (ori) {
-    stepper[id]->setSpeed(SPEED * ori);
-    stepper[id]->runSpeed();
+    stepper[id]->move(dis * ori);
+      // while (stepper[id]->run());
+      // Serial.println(e);
+      // Serial.println(step[id / 4][ori] + e);
+  //    stepper[id]->runToPosition();
+  //    Serial.println(stepper[id]->speed());
+  //    stepper[id]->stop();
+  
+    while (stepper[id]->distanceToGo() != 0) {
+      stepper[id]->setSpeed(500);
+      stepper[id]->runSpeedToPosition();
+    }
   } else {
-    id = ori = 0;
+    // id = ori = 0;
+    stepper[id]->stop();
   }
   // Serial.println("Quit man_ctrl()");
 }
@@ -176,8 +189,8 @@ void solve() {
       continue;
     char ori = ' ';
     if (i != comdata.length() - 1
-      && (comdata[i+1] == '\'' || comdata[i+1] == '2'))
-    ori = comdata[i+1];
+        && (comdata[i+1] == '\'' || comdata[i+1] == '2'))
+      ori = comdata[i+1];
     //Serial.println(comdata[i]);
     //Serial.println(ori);
     move(comdata[i], ori);
@@ -379,7 +392,9 @@ void baseMove(String com) {
       int e = 0;
       if (id < 4) {
         // offset[id] = -offset[id] + (ori? -5 : 5);
-        e = offset[ori];
+        e = offset[ori] - totalError[id];
+        if (ori == 2) totalError[id] = offset[ori];
+        else totalError[id] = 0;
       }
       stepper[id]->move(step[id / 4][ori] + e);
       // while (stepper[id]->run());
