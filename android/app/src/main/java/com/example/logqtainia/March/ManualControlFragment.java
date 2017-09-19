@@ -93,10 +93,10 @@ public class ManualControlFragment extends Fragment {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 switch (v.getId()) {
                     case R.id.btn_pos:
-                        ((MainActivity) getActivity()).getBTHelper().send((singleStepperId + "0").getBytes());
+                        ((MainActivity) getActivity()).getBTHelper().send((singleStepperId + "2").getBytes());
                         break;
                     case R.id.btn_neg:
-                        ((MainActivity) getActivity()).getBTHelper().send((singleStepperId + "2").getBytes());
+                        ((MainActivity) getActivity()).getBTHelper().send((singleStepperId + "0").getBytes());
                         break;
                     case R.id.btn_catch:
                         ((MainActivity) getActivity()).getBTHelper().send((multiStepperId + "0").getBytes());

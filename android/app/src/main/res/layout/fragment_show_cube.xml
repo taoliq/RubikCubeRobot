@@ -6,46 +6,13 @@
     android:layout_height="match_parent"
     tools:context="com.example.logqtainia.March.MainActivity">
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:id="@+id/container_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:id="@+id/btn_load_cube"
-            android:layout_width="match_parent"
-            android:layout_height="88dp"
-            android:background="@color/colorPrimaryDark"
-            android:gravity="center"
-            android:text="Capture"
-            android:textColor="#FFFF"
-            android:layout_weight="1" />
-
-        <Button
-            android:id="@+id/btn_open_blue_tooth"
-            android:layout_width="match_parent"
-            android:layout_height="88dp"
-            android:gravity="center"
-            android:text="Open Blue Tooth"
-            android:layout_weight="1" />
-
-        <Button
-            android:id="@+id/btn_manual_control"
-            android:layout_width="match_parent"
-            android:layout_height="88dp"
-            android:gravity="center"
-            android:text="Manual Contorl"
-            android:layout_weight="1" />
-
-    </LinearLayout>
 
     <RelativeLayout
         android:id="@+id/drawCubeLayout"
         android:layout_width="wrap_content"
         android:layout_height="270dp"
-        android:layout_below="@id/container_layout"
-        android:layout_centerHorizontal="true">
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="51dp">
 
         <LinearLayout
             android:id="@+id/cubeFace4"
@@ -74,8 +41,8 @@
         <LinearLayout
             android:id="@+id/cubeFace3"
             style="@style/CubeFace"
-            android:layout_toRightOf="@id/cubeFace4"
-            android:layout_below="@id/cubeFace2"></LinearLayout>
+            android:layout_below="@id/cubeFace2"
+            android:layout_toRightOf="@id/cubeFace4"></LinearLayout>
 
         <LinearLayout
             android:id="@+id/cubeFace5"
@@ -84,6 +51,7 @@
             android:layout_toRightOf="@id/cubeFace1"></LinearLayout>
 
     </RelativeLayout>
+
 
     <TextView
         android:id="@+id/textView2"
@@ -94,12 +62,44 @@
         android:layout_marginTop="51dp"
         android:text="TextView" />
 
+    <LinearLayout
+        android:id="@+id/container_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btn_solve_cube"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_load_cube"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Capture" />
+
+
+        <Button
+            android:id="@+id/btn_open_blue_tooth"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_weight="1"
+            android:text="Open Blue Tooth" />
+
+        <Button
+            android:id="@+id/btn_manual_control"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:layout_weight="1"
+            android:text="Manual Contorl" />
+
+    </LinearLayout>
+
     <Button
         android:id="@+id/btn_solve_cube"
         android:layout_width="match_parent"
-        android:background="@color/colorPrimaryDark"
+        android:layout_height="48dp"
         android:layout_alignParentBottom="true"
-        android:text="Solve"
-        android:textColor="#FFFF"
-        android:layout_height="48dp" />
+        android:text="Solve" />
+
 </RelativeLayout>
