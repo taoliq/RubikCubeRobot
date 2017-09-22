@@ -9,6 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -18,7 +20,7 @@ import cs.min2phase.Search;
  * Created by tarjan on 17-3-11.
  */
 
-public class ShowCubeFragment extends Fragment {
+public class ShowCubeFragment extends Fragment implements View.OnClickListener{
 //    public static final int SIZE = 3;
 //    public static final String FACES_ORDER = "UDFBLR";
 
@@ -31,10 +33,10 @@ public class ShowCubeFragment extends Fragment {
 
     TextView tv;
     TextView[] cubePieceTextView = new TextView[54];
-    Button btnLoadCube;
-    Button btnOpenBT;
-    Button btnSolveCube;
-    Button btnManCtrl;
+//    Button btnLoadCube;
+//    Button btnOpenBT;
+//    Button btnSolveCube;
+//    Button btnManCtrl;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -43,50 +45,40 @@ public class ShowCubeFragment extends Fragment {
 
         tv = (TextView) view.findViewById(R.id.textView2);
 
-        btnLoadCube = (Button) view.findViewById(R.id.btn_load_cube);
-        btnLoadCube.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (((MainActivity) getActivity()).getBTHelper() != null)
-                    ((MainActivity) getActivity()).getBTHelper().send(":Init".getBytes());
-                getFragmentManager()
-                        .beginTransaction()
-                        .addToBackStack(null)
-                        .replace(R.id.container, new LoadCubeFragment())
-                        .commit();
-            }
-        });
+        Button btnLoadCube = (Button) view.findViewById(R.id.btn_load_cube);
+        btnLoadCube.setOnClickListener(this);
 
-        btnOpenBT = (Button) view.findViewById(R.id.btn_open_blue_tooth);
+        Button btnOpenBT = (Button) view.findViewById(R.id.btn_open_blue_tooth);
         if (((MainActivity) getActivity()).getBTHelper() != null)
             btnOpenBT.setEnabled(
                     !(((MainActivity) getActivity()).getBTHelper().getConnected()));
-        btnOpenBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((MainActivity) getActivity()).connectToBT();
-            }
-        });
+        btnOpenBT.setOnClickListener(this);
 
-        btnManCtrl = (Button) view.findViewById(R.id.btn_manual_control);
+        Button btnManCtrl = (Button) view.findViewById(R.id.btn_manual_control);
         btnManCtrl.setEnabled(false);
         if (((MainActivity) getActivity()).getBTHelper() != null)
             btnManCtrl.setEnabled(
                     ((MainActivity) getActivity()).getBTHelper().getConnected());
-        btnManCtrl.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (((MainActivity) getActivity()).getBTHelper() != null)
-                    ((MainActivity) getActivity()).getBTHelper().send(":Manual".getBytes());
-                getFragmentManager()
-                        .beginTransaction()
-                        .addToBackStack(null)
-                        .replace(R.id.container, new ManualControlFragment())
-                        .commit();
-            }
-        });
+        btnManCtrl.setOnClickListener(this);
 
-        btnSolveCube = (Button) view.findViewById(R.id.btn_solve_cube);
+        CheckBox chkAutoMode = (CheckBox) view.findViewById(R.id.chk_auto_mode);
+        chkAutoMode.setEnabled(false);
+        chkAutoMode.setChecked(((MainActivity) getActivity()).getAutoMode());
+        if (((MainActivity) getActivity()).getBTHelper() != null)
+            chkAutoMode.setEnabled(
+                    ((MainActivity) getActivity()).getBTHelper().getConnected());
+        chkAutoMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView,
+                        boolean isChecked) {
+                    // TODO Auto-generated method stub
+                    ((MainActivity) getActivity()).setAutoMode(isChecked);
+//                    Log.i("chkBtn", isChecked + "");
+                }
+            });
+
+
+        Button btnSolveCube = (Button) view.findViewById(R.id.btn_solve_cube);
         btnSolveCube.setEnabled(false);
         if (((MainActivity) getActivity()).getBTHelper() != null)
             btnSolveCube.setEnabled(
@@ -94,9 +86,7 @@ public class ShowCubeFragment extends Fragment {
         btnSolveCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                result = tv.getText().toString().replace(" ", "");
-                ((MainActivity) getActivity()).getBTHelper().send(result.getBytes());
-                Log.i("Solve Result", result);
+                sendToArduino();
             }
         });
 
@@ -108,6 +98,10 @@ public class ShowCubeFragment extends Fragment {
             public void run() {
                 //Error 8 probeMax 100 -> 1000
                 result = search.solution(cubeString, maxDepth, 1000, 0, mask);
+                if (((MainActivity) getActivity()).getAutoMode()
+                        && ((MainActivity) getActivity()).getBTHelper() != null) {
+                    sendToArduino();
+                }
                 tv.post(new Runnable() {
                     @Override
                     public void run() {
@@ -118,6 +112,54 @@ public class ShowCubeFragment extends Fragment {
         }.start();
 
         return view;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_load_cube:
+                if (((MainActivity) getActivity()).getBTHelper() != null)
+                    ((MainActivity) getActivity()).getBTHelper().send(":Init".getBytes());
+                getFragmentManager()
+                        .beginTransaction()
+                        .hide(this)
+                        .add(R.id.container, new LoadCubeFragment())
+                        .addToBackStack(null)
+                        .commit();
+                break;
+            case R.id.btn_open_blue_tooth:
+                ((MainActivity) getActivity()).connectToBT();
+                break;
+            case R.id.btn_manual_control:
+                if (((MainActivity) getActivity()).getBTHelper() != null)
+                    ((MainActivity) getActivity()).getBTHelper().send(":Manual".getBytes());
+                getFragmentManager()
+                        .beginTransaction()
+                        .addToBackStack(null)
+                        .hide(this)
+                        .add(R.id.container, new ManualControlFragment())
+                        .commit();
+                break;
+            default: break;
+        }
+    }
+
+//    @Override
+//    public void onResume() {
+//        super.onResume();
+////        Log.i("onResume_autoMode", ((MainActivity) getActivity()).getAutoMode() + "");
+////        Log.i("onResume_BT", (((MainActivity) getActivity()).getBTHelper() != null) + "");
+////        if (((MainActivity) getActivity()).getAutoMode()
+////                && ((MainActivity) getActivity()).getBTHelper() != null) {
+////            sendToArduino();
+////            Log.i("onResume", "here u r");
+////        }
+//    }
+
+    private void sendToArduino() {
+//        result = tv.getText().toString().replace(" ", "");
+        ((MainActivity) getActivity()).getBTHelper().send(result.replace(" ", "").getBytes());
+        Log.i("Solve Result", result);
     }
 
     private void initDrawCube(View view) {
@@ -145,7 +187,7 @@ public class ShowCubeFragment extends Fragment {
 //                    tv.setBackgroundResource(R.drawable.border);
                     l.addView(tv);
                     cubePieceTextView[i * 9 + j * 3 + k] = tv;
-                    cubePieceTextView[i * 9 + j * 3 + k].setText(i + "");
+//                    cubePieceTextView[i * 9 + j * 3 + k].setText(i + "");
                 }
                 cf.addView(l);
             }
@@ -155,7 +197,6 @@ public class ShowCubeFragment extends Fragment {
     private void drawCube() {
         colorName = ((MainActivity) getActivity()).getColorName();
         cubeString = ((MainActivity) getActivity()).getCubeString();
-        Log.i("colorString", cubeString);
 
         for (int i = 0; i < 54; i++) {
 //            Log.i("drawCube", cubeString.charAt(i) + "");
@@ -163,8 +204,6 @@ public class ShowCubeFragment extends Fragment {
             cubePieceTextView[i].setBackgroundColor(
                     ColorDetector.nameToRGB(
                             colorName[MainActivity.FACES_ORDER.indexOf(cubeString.charAt(i))]));
-//            Log.i("color", cubeString.charAt(i) + " " + MainActivity.FACES_ORDER.indexOf(cubeString.charAt(i)));
-//            Log.i("color", colorName[FACES_ORDER.indexOf(cubeString.charAt(i))]);
         }
     }
 }

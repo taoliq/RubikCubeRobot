@@ -32,6 +32,8 @@ public class MainActivity extends Activity {
     public static final int WHAT_ERROR = 1;
     public static final int WHAT_RECV = 2;
 
+    private boolean isAutoMode = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +62,11 @@ public class MainActivity extends Activity {
                             findFragmentByTag("ShowCube").
                             getView().
                             findViewById(R.id.btn_manual_control).
+                            setEnabled(res);
+                    getFragmentManager().
+                            findFragmentByTag("ShowCube").
+                            getView().
+                            findViewById(R.id.chk_auto_mode).
                             setEnabled(res);
                     getFragmentManager().
                             findFragmentByTag("ShowCube").
@@ -150,32 +157,6 @@ public class MainActivity extends Activity {
         mBTHelper.connect(PORT_UUID);
     }
 
-
-//
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-//    {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if(requestCode == 1000 && resultCode == 1001)
-//        {
-//            tv = (TextView)findViewById(R.id.textView2);
-//            tv.setText("");
-//            for (int i = 0; i < 6; i++) {
-////                tv.append(FACES_ORDER.charAt(i) + " "
-////                        + data.getStringExtra(FACES_ORDER.charAt(i) + "") + '\n');
-//                colorName[i] = data.getStringExtra(FACES_ORDER.charAt(i) + "");
-////                Log.i("color", 'A' + colorName[i]);
-//            }
-////            tv.append(data.getStringExtra("state"));
-//            cubeString = data.getStringExtra("state");
-//            drawCube();
-//
-//            //参数中魔方面顺序为URFDLB
-//            result = search.solution(cubeString, maxDepth, 100, 0, mask);
-//            tv.append("\n" + result);
-//        }
-//    }
-
     public void setColorName(String[] colorName) {
         this.colorName = colorName;
     }
@@ -194,6 +175,14 @@ public class MainActivity extends Activity {
 
     public BTHelper getBTHelper() {
         return mBTHelper;
+    }
+
+    public void setAutoMode(boolean autoMode) {
+        this.isAutoMode = autoMode;
+    }
+
+    public boolean getAutoMode() {
+        return isAutoMode;
     }
 
 }

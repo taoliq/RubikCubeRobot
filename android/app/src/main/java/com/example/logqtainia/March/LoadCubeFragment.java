@@ -1,6 +1,8 @@
 package com.example.logqtainia.March;
 
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -10,32 +12,30 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.SystemClock;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static com.example.logqtainia.March.ColorDetector.getColorName;
 
 
 public class LoadCubeFragment extends Fragment {
     //View
-    private SurfaceView surfaceView;
     private RelativeLayout guideRelativeLayout;
     private Button btnTake;
     private Camera camera = null;
@@ -44,35 +44,16 @@ public class LoadCubeFragment extends Fragment {
 
     //Data
     private Bitmap bitmap;
-    private int gap = 10;            //采样点间距
-    private int startX = 10, startY = 10; //采样初始点，左上角
+    private int gap;            //采样点间距
+    private int startX, startY; //采样初始点，左上角
     private int len = 10;            //采样边长
     private FaceColor[][] capturedFaces = new FaceColor[7][9];
-    //    private String[][] capturedFaces = new String[6][9];
-//    private String[] state = new String[9];
     private int currentFace = 0;
     private Toast toast;
-    private boolean isDraw = false; //是否绘制定位方块
+    private CameraPreview mPreview;
+
 
     View view;
-
-
-    private SurfaceHolder.Callback cpHolderCallback = new SurfaceHolder.Callback() {
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            startPreview();
-        }
-
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-//            setupGuide();
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-            stopPreview();
-        }
-    };
 
 
     @Override
@@ -80,20 +61,71 @@ public class LoadCubeFragment extends Fragment {
                              Bundle saveInstanceState) {
         view = inflater.inflate(R.layout.fragment_load_cube, container, false);
 
-        surfaceView = (SurfaceView) view.findViewById(R.id.surfaceView);
-        surfaceView.getHolder().addCallback(cpHolderCallback);
-
-        guideRelativeLayout = (RelativeLayout) view.findViewById(R.id.guide_relative_layout);
-        btnTake = (Button) view.findViewById(R.id.btn_take);
-        btnTake.setOnClickListener(new View.OnClickListener() {
+        mPreview = new CameraPreview(getActivity());
+        FrameLayout preview = (FrameLayout) view.findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
+        mPreview.getCameraInstance().setPreviewCallback(new Camera.PreviewCallback() {
             @Override
-            public void onClick(View v) {
-                takePicture(v);
+            public void onPreviewFrame(byte[] data, Camera camera) {
+                bitmap = decodeToBitMap(camera, data);
+
+                //data的格式为NV21,下面的函数不管用
+//                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+
+                for (int i = 0; i < MainActivity.SIZE; i++) {
+                    for (int j = 0; j < MainActivity.SIZE; j++) {
+                        Bitmap roi = bitmap.createBitmap(bitmap,
+                                startX + j * gap - len / 2, startY + i * gap - len / 2,
+                                len, len);
+                        float[] hsv = ColorDetector.averageColor(roi);
+                        capturedFaces[currentFace][i * 3 + j] =
+                                new FaceColor(hsv, currentFace * 10 + i * 3 + j);
+//                            String colorName = ColorDetector.getColorName(hsv);
+//                            state[i * 3 + j] = colorName;
+
+//                            float[] hsv = new float[3];
+//                            Color.RGBToHSV(color[0], color[1], color[2], hsv);
+//                            tvCapturedSquares[i][j].setText("#" + colorToHex(color) + "\n" + "HSV:" + "\n" + hsv[0] + "\n" + hsv[1] + "\n" + hsv[2]);
+//                            tvCapturedSquares[i][j].setTextColor(Color.rgb(color[0], color[1],color[2]));
+                        tvCapturedSquares[i][j].setText("H: " + (int) (hsv[0] * 10) / 10.0 +
+                                "\nS: " + (int) (hsv[1] * 10) / 10.0 +
+                                "\nV: " + (int) (hsv[2] * 10) / 10.0);
+                        tvCapturedSquares[i][j].setBackgroundColor(
+                                Color.HSVToColor(new float[]{hsv[0], hsv[1] / 255, hsv[2] / 255}));
+                    }
+                }
             }
         });
 
-        setupSquares(view);
-        setupGuide();
+        guideRelativeLayout = (RelativeLayout) view.findViewById(R.id.guide_relative_layout);
+        btnTake = (Button) view.findViewById(R.id.btn_take);
+        if (((MainActivity) getActivity()).getAutoMode())
+            btnTake.setText("AUTO TAKE");
+        btnTake.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((MainActivity) getActivity()).getAutoMode())
+                    new Thread(new Runnable() {
+                        public void run() {
+                            for (int i = 0; i < 7; i++) {
+                                handler.sendEmptyMessage(0);
+                                SystemClock.sleep(2000);
+                            }
+                        }
+                    }).start();
+//                for (int i = 0; i < 7; i++) {
+//                    takePicture(v);
+//                    Log.i("get color", currentFace + "");
+//                    SystemClock.sleep(2000);
+//                }
+                else
+                    takePicture(v);
+            }
+        });
+
+        setSquares(view);
+        setGuide();
+        setSampleLocation();
 
 //        DisplayMetrics dm = new DisplayMetrics();
 //        // 获取屏幕信息
@@ -105,6 +137,16 @@ public class LoadCubeFragment extends Fragment {
         return view;
     }
 
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 0) {
+                takePicture(getView());
+            }
+//                        super.handleMessage(msg);
+        }
+    };
+
 
     public void takePicture(View view) {
         if (currentFace > 5) {
@@ -112,7 +154,13 @@ public class LoadCubeFragment extends Fragment {
             if (((MainActivity) getActivity()).getBTHelper() != null)
                 ((MainActivity) getActivity()).getBTHelper().send(
                         (":Solve").getBytes());
-            getFragmentManager().popBackStack();
+
+            FragmentManager fm = getFragmentManager();
+            FragmentTransaction tx = fm.beginTransaction();
+            tx.remove(fm.findFragmentByTag("ShowCube"));
+            tx.replace(R.id.container, new ShowCubeFragment(), "ShowCube"); 
+            tx.commit();
+//            getFragmentManager().popBackStack();
             return;
         }
 
@@ -148,27 +196,8 @@ public class LoadCubeFragment extends Fragment {
         String cubeString;
         for (int i = 0; i < 6; i++) colorName[i] = data[i].toString();
         cubeString = data[6].toString();
-        ((MainActivity)getActivity()).setColorName(colorName);
-        ((MainActivity)getActivity()).setCubeString(cubeString);
-    }
-
-    private String combine() {
-        //color to notation
-        Map<String, String> map = new HashMap<String, String>();
-        for (int i = 0; i < 6; i++) {
-//            map.put(capturedFaces[i][4], MainActivity.FACES_ORDER.charAt(i) + "");
-        }
-
-        String unsolvedState = "";
-        String color;
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 9; j++) {
-//                color = capturedFaces[i][j];
-//                unsolvedState += map.get(color);
-            }
-            unsolvedState += "\n";
-        }
-        return unsolvedState;
+        ((MainActivity) getActivity()).setColorName(colorName);
+        ((MainActivity) getActivity()).setCubeString(cubeString);
     }
 
     private void showToast(String text) {
@@ -181,97 +210,21 @@ public class LoadCubeFragment extends Fragment {
         }
     }
 
-    //开始预览
-    private void startPreview() {
-        releaseCameraAndPreview();
-        camera = Camera.open();
-        try {
-            camera.setPreviewDisplay(surfaceView.getHolder());
-            camera.setDisplayOrientation(90);   //让相机旋转90度
-
-            //采样点初始化
-            Camera.Size size = camera.getParameters().getPreviewSize();
-            Log.i("carmera parameter", size.width + " " + size.height);
-            int h = size.width; //相机是横着的
-            int w = size.height;
-            gap = Math.min(w, h) / 4;
-            int cX = w / 2;
-            int cY = gap * 3 / 2;
-            startX = cX - gap;
-            startY = cY - gap;
-
-            DisplayMetrics dm = new DisplayMetrics();
-            getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
-            int screenWidth = dm.widthPixels;
-            int screenHeigh = dm.heightPixels;
-
-            //改变surfaceView尺寸
-            RelativeLayout.LayoutParams p =
-                    new RelativeLayout.LayoutParams(screenWidth, screenWidth * h / w);
-            surfaceView.setLayoutParams(p);
-            Log.i("startPreview", surfaceView.getWidth() + " " +  surfaceView.getHeight());
-
-            //setupGuide();
-
-            Camera.Parameters params = camera.getParameters();
-            params.setPreviewSize(h, w);
-            params.setPreviewFormat(ImageFormat.NV21);
-            camera.setParameters(params);
-            camera.startPreview();
-            camera.setPreviewCallback(new Camera.PreviewCallback() {
-                @Override
-                public void onPreviewFrame(byte[] data, Camera camera) {
-                    bitmap = decodeToBitMap(data);
-
-                    //data的格式为NV21,下面的函数不管用
-//                    bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-
-                    for (int i = 0; i < MainActivity.SIZE; i++) {
-                        for (int j = 0; j < MainActivity.SIZE; j++) {
-                            Bitmap roi = bitmap.createBitmap(bitmap,
-                                    startX + j * gap - len / 2, startY + i * gap - len / 2,
-                                    len, len);
-                            float[] hsv = ColorDetector.averageColor(roi);
-                            capturedFaces[currentFace][i * 3 + j] =
-                                    new FaceColor(hsv, currentFace * 10 + i * 3 + j);
-//                            String colorName = ColorDetector.getColorName(hsv);
-//                            state[i * 3 + j] = colorName;
-
-//                            float[] hsv = new float[3];
-//                            Color.RGBToHSV(color[0], color[1], color[2], hsv);
-//                            tvCapturedSquares[i][j].setText("#" + colorToHex(color) + "\n" + "HSV:" + "\n" + hsv[0] + "\n" + hsv[1] + "\n" + hsv[2]);
-//                            tvCapturedSquares[i][j].setTextColor(Color泡沫版.rgb(color[0], color[1],color[2]));
-                            tvCapturedSquares[i][j].setText("H: " + (int)(hsv[0]*10)/10.0 +
-                                    "\nS: " + (int)(hsv[1]*10)/10.0 +
-                                    "\nV: " + (int)(hsv[2]*10)/10.0);
-                            tvCapturedSquares[i][j].setBackgroundColor(
-                                    Color.HSVToColor(new float[]{hsv[0], hsv[1] / 255, hsv[2] / 255}));
-                        }
-                    }
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void setSampleLocation() {
+//        Camera.Size size = camera.getParameters().getPreviewSize();
+        Camera.Size previewSize = mPreview.getCameraInstance().getParameters().getPreviewSize();
+//        Log.i("carmera parameter", size.width + " " + size.height);
+        int h = previewSize.width; //相机是横着的
+        int w = previewSize.height;
+        gap = Math.min(w, h) / 4;
+        int cX = w / 2;
+        int cY = gap * 3 / 2;
+        startX = cX - gap;
+        startY = cY - gap;
     }
 
-    //停止预览
-    private void stopPreview() {
-        camera.setPreviewCallback(null);
-        camera.stopPreview();
-        camera.release();
-        camera = null;
-    }
 
-    private void releaseCameraAndPreview() {
-//        myCameraPreview.setCamera(null);
-        if (camera != null) {
-            camera.release();
-            camera = null;
-        }
-    }
-
-    public Bitmap decodeToBitMap(byte[] data) {
+    public Bitmap decodeToBitMap(Camera camera, byte[] data) {
         Camera.Size size = camera.getParameters().getPreviewSize();
         Log.i("decode", size.width + " " + size.height);
 //        int w = guideRelativeLayout.getRight();
@@ -309,7 +262,7 @@ public class LoadCubeFragment extends Fragment {
         return null;
     }
 
-    private void setupSquares(View view) {
+    private void setSquares(View view) {
         // Setup squares at the top right corner
         int s = dpToPx(150) / MainActivity.SIZE;
 //        LinearLayout cpw = (LinearLayout) findViewById(R.id.colorPreviewWrapper);
@@ -352,7 +305,7 @@ public class LoadCubeFragment extends Fragment {
     }
 
     //用来设置定位的九个点
-    private void setupGuide() {
+    private void setGuide() {
         //Setup guide squares
 //        float endX = surfaceView.getRight();
 //        float endY = surfaceView.getBottom();
@@ -368,11 +321,11 @@ public class LoadCubeFragment extends Fragment {
         int h = screenHeigh;
         int w = screenWidth;
         Log.i("guide square", h + " " + w);
-        gap = Math.min(w, h) / 4;
+        int guideGap = Math.min(w, h) / 4;
         int cX = w / 2;
-        int cY = gap * 3 / 2;
-        startX = cX - gap;
-        startY = cY - gap;
+        int cY = guideGap * 3 / 2;
+        int guideStartX = cX - guideGap;
+        int guideStartY = cY - guideGap;
 
         len = dpToPx(10);
 //        System.out.print(endX + '\n' + endY);
@@ -386,8 +339,8 @@ public class LoadCubeFragment extends Fragment {
                 TextView tv = new TextView(view.getContext());
 //                tv.setTextSize(10);
 //                tv.setText("ere");
-                tv.setX(startX + gap * i - len / 2);
-                tv.setY(startY + gap * j - len / 2);
+                tv.setX(guideStartX + guideGap * i - len / 2);
+                tv.setY(guideStartY + guideGap * j - len / 2);
                 tv.setWidth(len);
                 tv.setHeight(len);
                 tv.setBackgroundColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
