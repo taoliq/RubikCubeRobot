@@ -13,25 +13,26 @@
         android:layout_weight="1">
 
 
+        <FrameLayout
+            android:id="@+id/camera_preview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
-        <SurfaceView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/surfaceView" />
+        </FrameLayout>
 
         <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
             android:id="@+id/square_linear_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_height="wrap_content">
+            android:orientation="vertical">
 
         </LinearLayout>
 
         <RelativeLayout
+            android:id="@+id/guide_relative_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/guide_relative_layout">
+            android:layout_height="match_parent">
 
         </RelativeLayout>
 
@@ -39,17 +40,17 @@
     </RelativeLayout>
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 
         <Button
-            android:text="Take"
-            android:textAllCaps="true"
+            android:id="@+id/btn_take"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/btn_take"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:text="Take"
+            android:textAllCaps="true" />
 
     </LinearLayout>
 
