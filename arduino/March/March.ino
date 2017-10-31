@@ -25,7 +25,7 @@ AccelStepper* stepper[6] = {
 MultiStepper multiStepper[2];
 
 char cubeStatus = 'O';  //means cube's Status in getting colors
-int isyRotate = 0; //Did chube have y rotate?
+int isxRotate = 0; //Did chube have x rotate?
 int ctrlMode = SOLVE;
 String comdata = "";
 int step[2][3] = {400, -400, -800,
@@ -113,7 +113,7 @@ void exeCom() {
 
 void init_cube() {
     cubeStatus = 'O'; 
-    isyRotate = 0;
+    isxRotate = 0;
     for (int i = 0; i < 4; i++)
       totalError[i] = 0;
 }
@@ -201,14 +201,16 @@ void move(char face, char ori) {
   switch (face) {
     // case 'U': moveU(ori); break;
     // case 'F': moveF(ori); break;
-    case 'U': moveUF('U', ori); break;
-    case 'F': moveUF('F', ori); break;
+    case 'U': moveU(ori); break;
+    case 'F': moveF(ori); break;
     case 'R': moveR(ori); break;
     case 'L': moveL(ori); break;
     // case 'B': moveB(ori); break;
     // case 'D': moveD(ori); break;
-    case 'B': moveDB('B', ori); break;
-    case 'D': moveDB('D', ori); break;
+    case 'B': moveB(ori); break;
+    case 'D': moveD(ori); break;
+    case 'x': rotateX(ori); break;
+    case 'z': rotateZ(ori); break;
     default: break;
   }
 }
@@ -254,20 +256,20 @@ void moveL(char ori) {
 }
 
 void moveU(char ori) {
-  moveY(0);
+  rotateX(1);
   moveF(ori);
-  moveY(1);
+  rotateX(0);
 }
 
 void moveUF(char face, char ori) {
-  if ((face == 'F' && isyRotate) || (face == 'U' && !isyRotate)) {
-    moveY(isyRotate);
-    isyRotate = !isyRotate;
+  if ((face == 'F' && isxRotate) || (face == 'U' && !isxRotate)) {
+    rotateX(1-isxRotate);
+    isxRotate = !isxRotate;
   }
     
-  // if (face == 'F' && !isyRotate) {
-  //   moveY(0);
-  //   isyRotate = true;
+  // if (face == 'F' && !isxRotate) {
+  //   rotateX(0);
+  //   isxRotate = true;
   // }
 
   String com = "";
@@ -280,9 +282,9 @@ void moveUF(char face, char ori) {
 }
 
 void moveDB(char face, char ori) {
-  if ((face == 'B' && isyRotate) || (face == 'D' && !isyRotate)) {
-    moveY(isyRotate);
-    isyRotate = !isyRotate;
+  if ((face == 'B' && isxRotate) || (face == 'D' && !isxRotate)) {
+    rotateX(1-isxRotate);
+    isxRotate = !isxRotate;
   }
 
   String com = "";
@@ -295,11 +297,12 @@ void moveDB(char face, char ori) {
 }
 
 void moveD(char ori) {
-  moveY(0);
+  rotateX(1);
   moveB(ori);
-  moveY(1);
+  rotateX(0);
 }
-void moveY(int ori) {
+
+void rotateX(int ori) {
   String com = "";
   
   //0,2爪子离开
@@ -307,21 +310,42 @@ void moveY(int ori) {
   //1，3爪子抓紧（防止魔方下坠
   com += "52";
   //1，3爪子旋转
-  com += ori? "71" : "70";
+  com += ori? "70" : "71";
   //0，2爪子靠近
   com += "40";
   //1，3爪子离开
   com += "51";
   //1，3爪子旋转
-  com += ori? "71" : "70";
+  com += ori? "70" : "71";
   //1，3爪子靠近
   com += "50";
 
   baseMove(com);
 }
 
+void rotateZ(int ori) {
+  String com = "";
+  
+  //1, 3爪子离开
+  com += "51";
+  //0, 2爪子抓紧（防止魔方下坠
+  com += "42";
+  //0, 2爪子旋转
+  com += ori? "60" : "61";
+  //1, 3爪子靠近
+  com += "50";
+  //0, 2爪子离开
+  com += "41";
+  //0, 2爪子旋转
+  com += ori? "60" : "61";
+  //0, 2爪子靠近
+  com += "40";
+
+  baseMove(com);
+}
+
 /*
-void moveY(int ori) {
+void rotateX(int ori) {
   //0,2爪子离开
   stepper[4]->move(step[1][1]);
 //  stepper[4]->stop();
