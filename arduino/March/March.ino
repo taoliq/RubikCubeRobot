@@ -25,7 +25,6 @@ AccelStepper* stepper[6] = {
 MultiStepper multiStepper[2];
 
 char cubeStatus = 'O';  //means cube's Status in getting colors
-int isxRotate = 0; //Did chube have x rotate?
 int ctrlMode = SOLVE;
 String comdata = "";
 int step[2][3] = {400, -400, -800,
@@ -113,7 +112,6 @@ void exeCom() {
 
 void init_cube() {
     cubeStatus = 'O'; 
-    isxRotate = 0;
     for (int i = 0; i < 4; i++)
       totalError[i] = 0;
 }
@@ -197,16 +195,20 @@ void solve() {
   }
 }
 
-void move(char face, char ori) {
+void move(char face, char ch) {
+  int ori;
+  switch (ch) {
+    case ' ':   ori = 0; break;
+    case '\'':  ori = 1; break;
+    case '2':   ori = 2; break;
+    default:    break;
+  }
+
   switch (face) {
-    // case 'U': moveU(ori); break;
-    // case 'F': moveF(ori); break;
     case 'U': moveU(ori); break;
     case 'F': moveF(ori); break;
     case 'R': moveR(ori); break;
     case 'L': moveL(ori); break;
-    // case 'B': moveB(ori); break;
-    // case 'D': moveD(ori); break;
     case 'B': moveB(ori); break;
     case 'D': moveD(ori); break;
     case 'x': rotateX(ori); break;
@@ -215,88 +217,53 @@ void move(char face, char ori) {
   }
 }
 
-void moveF(char ori) {
+void moveF(int ori) {
   String com = "";
   switch (ori) {
-    case ' ':   com = "00410140"; break;
-    case '\'':  com = "01410040"; break;
-    case '2':   com = "02"; break;
+    case 0: com = "00410140"; break;
+    case 1: com = "01410040"; break;
+    case 2: com = "02"; break;
   }
   baseMove(com);
 }
 
-void moveR(char ori) {
+void moveR(int ori) {
   String com = "";
   switch (ori) {
-    case ' ':   com = "10511150"; break;
-    case '\'':  com = "11511050"; break;
-    case '2':   com = "12"; break;
+    case 0: com = "10511150"; break;
+    case 1: com = "11511050"; break;
+    case 2: com = "12"; break;
   }
   baseMove(com);
 }
 
-void moveB(char ori) {
+void moveB(int ori) {
   String com = "";
   switch (ori) {
-    case ' ':   com = "20412140"; break;
-    case '\'':  com = "21412040"; break;
-    case '2':   com = "22"; break;
+    case 0: com = "20412140"; break;
+    case 1: com = "21412040"; break;
+    case 2: com = "22"; break;
   }
   baseMove(com);
 }
 
-void moveL(char ori) {
+void moveL(int ori) {
   String com = "";
   switch (ori) {
-    case ' ':   com = "30513150"; break;
-    case '\'':  com = "31513050"; break;
-    case '2':   com = "32"; break;
+    case 0: com = "30513150"; break;
+    case 1: com = "31513050"; break;
+    case 2: com = "32"; break;
   }
   baseMove(com);
 }
 
-void moveU(char ori) {
+void moveU(int ori) {
   rotateX(1);
   moveF(ori);
   rotateX(0);
 }
 
-void moveUF(char face, char ori) {
-  if ((face == 'F' && isxRotate) || (face == 'U' && !isxRotate)) {
-    rotateX(1-isxRotate);
-    isxRotate = !isxRotate;
-  }
-    
-  // if (face == 'F' && !isxRotate) {
-  //   rotateX(0);
-  //   isxRotate = true;
-  // }
-
-  String com = "";
-  switch (ori) {
-    case ' ':   com = "00410140"; break;
-    case '\'':  com = "01410040"; break;
-    case '2':   com = "02"; break;
-  }
-  baseMove(com);
-}
-
-void moveDB(char face, char ori) {
-  if ((face == 'B' && isxRotate) || (face == 'D' && !isxRotate)) {
-    rotateX(1-isxRotate);
-    isxRotate = !isxRotate;
-  }
-
-  String com = "";
-  switch (ori) {
-    case ' ':   com = "20412140"; break;
-    case '\'':  com = "21412040"; break;
-    case '2':   com = "22"; break;
-  }
-  baseMove(com);
-}
-
-void moveD(char ori) {
+void moveD(int ori) {
   rotateX(1);
   moveB(ori);
   rotateX(0);
@@ -434,11 +401,11 @@ void baseMove(String com) {
       }
     } else {
       if (id == 6) {
-        position[0] = stepper[0]->currentPosition() + step[0][ori];
-        position[1] = stepper[2]->currentPosition() - step[0][ori];
+        position[0] = stepper[0]->currentPosition() - step[0][ori];
+        position[1] = stepper[2]->currentPosition() + step[0][ori];
       } else {
-        position[0] = stepper[1]->currentPosition() + step[0][ori];
-        position[1] = stepper[3]->currentPosition() - step[0][ori];
+        position[0] = stepper[1]->currentPosition() - step[0][ori];
+        position[1] = stepper[3]->currentPosition() + step[0][ori];
       }
       multiStepper[id%2].moveTo(position);
       multiStepper[id%2].runSpeedToPosition();
