@@ -434,11 +434,11 @@ void baseMove(String com) {
       }
     } else {
       if (id == 6) {
-        position[0] = stepper[0]->currentPosition() - step[0][ori];
-        position[1] = stepper[2]->currentPosition() + step[0][ori];
+        position[0] = stepper[0]->currentPosition() + step[0][ori];
+        position[1] = stepper[2]->currentPosition() - step[0][ori];
       } else {
-        position[0] = stepper[1]->currentPosition() - step[0][ori];
-        position[1] = stepper[3]->currentPosition() + step[0][ori];
+        position[0] = stepper[1]->currentPosition() + step[0][ori];
+        position[1] = stepper[3]->currentPosition() - step[0][ori];
       }
       multiStepper[id%2].moveTo(position);
       multiStepper[id%2].runSpeedToPosition();
