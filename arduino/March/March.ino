@@ -198,9 +198,9 @@ void solve() {
 void move(char face, char ch) {
   int ori;
   switch (ch) {
-    case ' ':   ori = 0; break;
-    case '\'':  ori = 1; break;
-    case '2':   ori = 2; break;
+    case ' ':  ori = 0; break;
+    case '\'': ori = 1; break;
+    case '2':  ori = 2; break;
     default:    break;
   }
 
