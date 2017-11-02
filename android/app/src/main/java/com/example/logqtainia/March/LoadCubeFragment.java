@@ -32,6 +32,7 @@ import android.widget.Toast;
 import java.io.ByteArrayOutputStream;
 
 import static com.example.logqtainia.March.ColorDetector.getColorName;
+import static com.example.logqtainia.March.ColorDetector.getColorName2;
 
 
 public class LoadCubeFragment extends Fragment {
@@ -51,6 +52,7 @@ public class LoadCubeFragment extends Fragment {
     private int currentFace = 0;
     private Toast toast;
     private CameraPreview mPreview;
+    public static final String FACES_ORDER = "UDFBLR"; //扫描顺序
 
 
     View view;
@@ -91,7 +93,7 @@ public class LoadCubeFragment extends Fragment {
                                 "\nS: " + (int) (hsv[1] * 10) / 10.0 +
                                 "\nV: " + (int) (hsv[2] * 10) / 10.0);
                         tvCapturedSquares[i][j].setBackgroundColor(
-                                Color.HSVToColor(new float[]{hsv[0], hsv[1] / 255, hsv[2] / 255}));
+                                Color.HSVToColor(new float[]{hsv[0], hsv[1], hsv[2]}));
                     }
                 }
             }
@@ -191,7 +193,7 @@ public class LoadCubeFragment extends Fragment {
 //        intent.putExtra("state", data[6].toString());
 //        return intent;
 
-        StringBuilder[] data = getColorName(capturedFaces);
+        StringBuilder[] data = getColorName2(capturedFaces);
         String[] colorName = new String[6];
         String cubeString;
         for (int i = 0; i < 6; i++) colorName[i] = data[i].toString();

@@ -5,6 +5,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.hardware.Camera;
 import android.util.Log;
+import android.util.Size;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.Surface;
@@ -49,6 +50,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         getCameraInstance();
         try {
             mCamera.setPreviewDisplay(holder);
+
+//            Camera.Parameters parameters = mCamera.getParameters();
+//
+//            List<Camera.Size> list = parameters.getSupportedPreviewSizes();
+//            for (Camera.Size item:list
+//                    ) {
+//                Log.i("PreviewSize", item.width + " " + item.height + "\n");
+//            }
+
             mCamera.startPreview();
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
@@ -68,6 +78,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera.setDisplayOrientation(rotation);
         Camera.Parameters parameters = mCamera.getParameters();
         parameters.setRotation(rotation);
+
         mCamera.setParameters(parameters);
         adjustDisplayRatio(rotation);
 
@@ -90,18 +101,20 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             previewHeight = previewSize.height;
         }
 
-        if (width * previewHeight > height * previewWidth) {
-            final int scaledChildWidth = previewWidth * height / previewHeight;
-
-//            layout((width - scaledChildWidth) / 2, 0,
-//                    (width + scaledChildWidth) / 2, height);
-            layout(0, 0, scaledChildWidth, height);
-        } else {
-            final int scaledChildHeight = previewHeight * width / previewWidth;
-//            layout(0, (height - scaledChildHeight) / 2,
-//                    width, (height + scaledChildHeight) / 2);
-            layout(0, 0, width, scaledChildHeight);
-        }
+//        if (width * previewHeight > height * previewWidth) {
+//            final int scaledChildWidth = previewWidth * height / previewHeight;
+//
+////            layout((width - scaledChildWidth) / 2, 0,
+////                    (width + scaledChildWidth) / 2, height);
+//            layout(0, 0, scaledChildWidth, height);
+//        } else {
+//            final int scaledChildHeight = previewHeight * width / previewWidth;
+////            layout(0, (height - scaledChildHeight) / 2,
+////                    width, (height + scaledChildHeight) / 2);
+//            layout(0, 0, width, scaledChildHeight);
+//        }
+        final int scaledChildHeight = previewHeight * width / previewWidth;
+        layout(0, 0, width, scaledChildHeight);
     }
 
     public int getDisplayOrientation() {

@@ -14,18 +14,22 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import cs.min2phase.Search;
 
 /**
  * Created by tarjan on 17-3-11.
  */
 
-public class ShowCubeFragment extends Fragment implements View.OnClickListener{
+public class ShowCubeFragment extends Fragment implements View.OnClickListener {
 //    public static final int SIZE = 3;
 //    public static final String FACES_ORDER = "UDFBLR";
 
     private String cubeString;
     private String result;
+    private String betterSolution;
     private String[] colorName;
     private Search search = new Search();
     private int maxDepth = 21;
@@ -67,15 +71,15 @@ public class ShowCubeFragment extends Fragment implements View.OnClickListener{
         if (((MainActivity) getActivity()).getBTHelper() != null)
             chkAutoMode.setEnabled(
                     ((MainActivity) getActivity()).getBTHelper().getConnected());
-        chkAutoMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView,
-                        boolean isChecked) {
-                    // TODO Auto-generated method stub
-                    ((MainActivity) getActivity()).setAutoMode(isChecked);
+        chkAutoMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView,
+                                         boolean isChecked) {
+                // TODO Auto-generated method stub
+                ((MainActivity) getActivity()).setAutoMode(isChecked);
 //                    Log.i("chkBtn", isChecked + "");
-                }
-            });
+            }
+        });
 
 
         Button btnSolveCube = (Button) view.findViewById(R.id.btn_solve_cube);
@@ -86,7 +90,7 @@ public class ShowCubeFragment extends Fragment implements View.OnClickListener{
         btnSolveCube.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendToArduino();
+                sendToArduino(betterSolution);
             }
         });
 
@@ -98,14 +102,17 @@ public class ShowCubeFragment extends Fragment implements View.OnClickListener{
             public void run() {
                 //Error 8 probeMax 100 -> 1000
                 result = search.solution(cubeString, maxDepth, 1000, 0, mask);
+                betterSolution = optimize(result);
                 if (((MainActivity) getActivity()).getAutoMode()
                         && ((MainActivity) getActivity()).getBTHelper() != null) {
-                    sendToArduino();
+                    sendToArduino(betterSolution);
                 }
                 tv.post(new Runnable() {
                     @Override
                     public void run() {
-                        tv.setText("Solution is\n" + result);
+                        tv.setText("Solution:\n" + result);
+                        tv.append("\n--------------\nOptimized:\n");
+                        tv.append(betterSolution);
                     }
                 });
             }
@@ -140,7 +147,8 @@ public class ShowCubeFragment extends Fragment implements View.OnClickListener{
                         .add(R.id.container, new ManualControlFragment())
                         .commit();
                 break;
-            default: break;
+            default:
+                break;
         }
     }
 
@@ -156,10 +164,89 @@ public class ShowCubeFragment extends Fragment implements View.OnClickListener{
 ////        }
 //    }
 
-    private void sendToArduino() {
+    private void sendToArduino(String solution) {
 //        result = tv.getText().toString().replace(" ", "");
-        ((MainActivity) getActivity()).getBTHelper().send(result.replace(" ", "").getBytes());
-        Log.i("Solve Result", result);
+        ((MainActivity) getActivity()).getBTHelper().send(solution.replace(" ", "").getBytes());
+        Log.i("Solve Result", solution);
+    }
+
+    private String optimize(String str) {
+        StringBuffer origin = new StringBuffer(str.replace(" ", ""));
+//        System.out.println(origin);
+//        System.out.println(origin.length());
+        HashMap<Character, Integer> char2int = new HashMap<Character, Integer>();
+        char2int.put('F', 0);
+        char2int.put('B', 0);
+        char2int.put('U', 1);
+        char2int.put('D', 1);
+        char2int.put('R', 2);
+        char2int.put('L', 2);
+        String oriFace = "UDFBRL";
+        String xRotate = "BFUDRL";    //x整体旋转后映射关系
+        String zRotate = "RLFBDU";
+        String result = "";
+        int[] count = new int[origin.length() + 1];
+        int[] nxtPos = new int[origin.length()];
+        int[] lastPos = new int[3];
+        int from, to;
+        char oper;
+        for (int i = 0; i < lastPos.length; i++)
+            lastPos[i] = origin.length();
+        int startPos = 0;
+        while (startPos < origin.length() && origin.charAt(startPos) != 'U'
+                && origin.charAt(startPos) != 'D') {
+            startPos++;
+        }
+
+        if (startPos >= origin.length()) {
+            return origin.toString();
+        }
+
+        for (int i = origin.length() - 1; i >= startPos; i--) {
+            if (origin.charAt(i) == '2' || origin.charAt(i) == '\'')
+                continue;
+            int currentFace = char2int.get(origin.charAt(i));
+            int pos1 = lastPos[(currentFace + 1) % 3];
+            int pos2 = lastPos[(currentFace + 2) % 3];
+            // count[i] = Math.min(cnt1, cnt2) + 1;
+            if (count[pos1] < count[pos2]) {
+                count[i] = count[pos1] + 1;
+                nxtPos[i] = pos1;
+            } else {
+                count[i] = count[pos2] + 1;
+                nxtPos[i] = pos2;
+            }
+            lastPos[char2int.get(origin.charAt(i))] = i;
+//            //nxtPos[i] = 66666;
+        }
+        result += origin.substring(0, startPos);
+        from = startPos;
+        to = nxtPos[from];
+        while (from < origin.length()) {
+            to = nxtPos[from];
+            if (to == origin.length() || char2int.get(origin.charAt(to)) == 2) {
+                oper = 'z';
+            } else {
+                oper = 'x';
+            }
+            for (int i = from; i < origin.length(); i++) {
+                char ch;
+                int id = oriFace.indexOf(origin.charAt(i));
+                if (id == -1) continue;
+                if (oper == 'z') ch = zRotate.charAt(id);
+                else ch = xRotate.charAt(id);
+                origin.setCharAt(i, ch);
+            }
+            result += oper + origin.substring(from, to);
+            from = to;
+        }
+//        for (int i = 0; i < origin.length(); i++)
+//            System.out.print(count[i] + " ");
+//        // System.out.print(" ");
+//        System.out.println();
+//        for (int i = 0; i < origin.length(); i++)
+//            System.out.print(nxtPos[i] + " ");
+        return result;
     }
 
     private void initDrawCube(View view) {
@@ -199,11 +286,11 @@ public class ShowCubeFragment extends Fragment implements View.OnClickListener{
         cubeString = ((MainActivity) getActivity()).getCubeString();
 
         for (int i = 0; i < 54; i++) {
-//            Log.i("drawCube", cubeString.charAt(i) + "");
-//            Log.i("drawCube", FACES_ORDER.indexOf(cubeString.charAt(i)) + "");
-            cubePieceTextView[i].setBackgroundColor(
-                    ColorDetector.nameToRGB(
-                            colorName[MainActivity.FACES_ORDER.indexOf(cubeString.charAt(i))]));
+//            cubePieceTextView[i].setBackgroundColor(
+//                    ColorDetector.nameToRGB(
+//                            colorName[MainActivity.FACES_ORDER.indexOf(cubeString.charAt(i))]));
+            String color = colorName[MainActivity.FACES_ORDER.indexOf(cubeString.charAt(i))];
+            cubePieceTextView[i].setBackgroundColor(Integer.valueOf(color));
         }
     }
 }

@@ -24,7 +24,9 @@ public class MainActivity extends Activity {
     private String cubeString = "UUUUUUUUU" + "RRRRRRRRR" + "FFFFFFFFF"
             + "DDDDDDDDD" + "LLLLLLLLL" + "BBBBBBBBB";  //展开图中0-5分别为URFDLB
     private String result;
-    private String[] colorName = new String[]{"yellow", "white", "blue", "green", "orange", "red"};
+    private String[] colorName =
+            new String[]{0xFFFFFF00+"", 0xFFFFFFFF+"", 0xFF0000FF+"",
+                    0xFF00FF00+"", 0xFFFFA500+"", 0xFFFF0000+""};
 
     private BTHelper mBTHelper = null;
 

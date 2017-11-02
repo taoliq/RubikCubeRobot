@@ -34,6 +34,9 @@ public class Search {
      */
     public static final int EXTRA_PRUN_LEVEL = 0;
 
+    public static final String FACES_ORDER = "URFDLB"; //"FRBLUD";
+
+
     public static final boolean USF_FULL_PRUN = EXTRA_PRUN_LEVEL > 0;
     public static final boolean USF_HUGE_PRUN = EXTRA_PRUN_LEVEL > 1;
 

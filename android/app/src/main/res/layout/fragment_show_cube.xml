@@ -55,11 +55,12 @@
 
     <TextView
         android:id="@+id/textView2"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/drawCubeLayout"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="51dp"
+        android:typeface="monospace"
         android:text="TextView" />
 
     <LinearLayout

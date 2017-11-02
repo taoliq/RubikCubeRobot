@@ -2,8 +2,12 @@ package com.example.logqtainia.March;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.FaceDetector;
+import android.util.Log;
 
 import java.util.Comparator;
+
+import cs.min2phase.Search;
 
 import static java.util.Arrays.sort;
 
@@ -38,8 +42,8 @@ public class ColorDetector {
         b = Math.sqrt(b / (double) s);
         Color.RGBToHSV((int) r, (int) g, (int) b, hsv);
 //        hsv[0] /= 2;  //提高精度
-        hsv[1] *= 255;
-        hsv[2] *= 255;
+//        hsv[1] *= 255;
+//        hsv[2] *= 255;
         return hsv;
     }
 
@@ -67,20 +71,69 @@ public class ColorDetector {
         else if (h <= 130)
             return "blue";
 
-//        if h < 15 and v < 100:
-//        return 'red'
-//        if h <= 10 and v > 100:
-//        return 'orange'
-//        elif h <= 30 and s <= 100:
-//        return 'white'
-//        elif h <= 40:
-//        return 'yellow'
-//        elif h <= 85:
-//        return 'green'
-//        elif h <= 130:
-//        return 'blue'
-
         return "white";
+    }
+
+    public static StringBuilder[] getColorName2(FaceColor[][] capturedFaces) {
+        FaceColor[] faceColor = new FaceColor[63];
+        StringBuilder[][] cubeState = new StringBuilder[6][9];
+        //前六个元素表示对应面的颜色，最后一个元素表示魔方的状态，如FFFFFFFFFRRRRRRBBBBBBLLLLLLUUUUUUDDDDDD
+        StringBuilder[] result = new StringBuilder[7];
+
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 9; j++) {
+                faceColor[i * 9 + j] = capturedFaces[i][j];
+            }
+        }
+
+        float minDis = 960728;
+        for (int i = 0; i < 45; i++) {
+            if (i % 9 == 0) {
+                continue;
+            }
+            minDis = 960728;
+            for (int j = i; j < 54; j++) {
+                float tmpDis = FaceColor.distanceOf(faceColor[i / 9 * 9], faceColor[j]);
+                if (tmpDis < minDis) {
+                    minDis = tmpDis;
+                    FaceColor tmp = faceColor[i];
+                    faceColor[i] = faceColor[j];
+                    faceColor[j] = tmp;
+                }
+            }
+        }
+//        result[0] = new StringBuilder(faceColor[0].getColor() + "");
+//        result[1] = new StringBuilder(faceColor[9].getColor() + "");
+//        result[2] = new StringBuilder(faceColor[18].getColor() + "");
+//        result[3] = new StringBuilder(faceColor[27].getColor() + "");
+//        result[4] = new StringBuilder(faceColor[36].getColor() + "");
+//        result[5] = new StringBuilder(faceColor[45].getColor() + "");
+        result[6] = new StringBuilder();
+        for (int i = 0; i < 54; i++) result[6].append(' ');
+
+        for (int i = 0; i < 6; i++) {
+            char notation = ' ';
+            for (int j = 0; j < 9; j++) {
+                if (faceColor[i*9 + j].getId() % 10 == 4) {
+                    int face = faceColor[i*9 + j].getId() / 10;
+                    notation = LoadCubeFragment.FACES_ORDER.charAt(face);
+                    result[MainActivity.FACES_ORDER.indexOf(notation)] =
+                            new StringBuilder(faceColor[i*9 + j].getColor() + "");
+                }
+            }
+            for (int j = 0; j < 9; j++) {
+                int id = faceColor[i*9 + j].getId();
+                Log.i("getColorName2", id + " ");
+                int changedFacePos = Search.FACES_ORDER.indexOf(
+                        LoadCubeFragment.FACES_ORDER.charAt(id/10));
+                result[6].setCharAt(changedFacePos * 9 + (id%10), notation);
+            }
+            Log.i("getColorName2", " ");
+        }
+
+        Log.i("ColorDetector", result[6].toString());
+
+        return result;
     }
 
     public static StringBuilder[] getColorName(FaceColor[][] capturedFaces) {
@@ -100,7 +153,7 @@ public class ColorDetector {
         sort(faceColor, 0, 54, new Comparator<FaceColor>() {
             @Override
             public int compare(FaceColor o1, FaceColor o2) {
-                return o1.getS() - o2.getS();
+                return (int)o1.getS() - (int)o2.getS();
             }
         });
         //先找到颜色对应的方向符号
@@ -110,7 +163,7 @@ public class ColorDetector {
         sort(faceColor, 9, 54, new Comparator<FaceColor>() {
             @Override
             public int compare(FaceColor o1, FaceColor o2) {
-                return o1.getH() - o2.getH();
+                return (int)o1.getH() - (int)o2.getH();
             }
         });
         //将h值最小的9个复制一遍到最后，解决红色h值范围问题
